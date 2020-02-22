@@ -1,4 +1,4 @@
-# jparvsu
+# MMD (Multi-Modal Dialogue) 
 
 ## Preprocess
 
@@ -15,6 +15,5 @@
 ### Text modality
 
 1. `$ cd modality/text`
-2. `$ python prepreprocess.py`
-3. `$ python train.py --task response --text_model lstm`
-4. `$ python --path models/response/lstm_*.pt --log`
+2. `$ python train.py --task response --text_model lstm`
+3. `$ python eval.py --path models/response/lstm_*.pt --log`

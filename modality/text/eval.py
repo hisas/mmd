@@ -2,7 +2,7 @@ import os
 import sys
 import pathlib
 current_dir = pathlib.Path(__file__).resolve().parent
-sys.path.append(str(current_dir) + '/../../models')
+sys.path.append(str(current_dir) + '/../..')
 import argparse
 import json
 from attrdict import AttrDict
@@ -12,7 +12,6 @@ import logging
 from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
-
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -56,7 +55,7 @@ def h(sentence_ids):
 def calc_test_accuracy():
     test_correct_count = 0
 
-    for contexts, contexts_len, responses, responses_len, labels in tqdm(test_1_loader):
+    for contexts, contexts_len, _, _, responses, responses_len, labels in tqdm(test_1_loader):
         with torch.no_grad():
             if text_model == 'lstm':
                 contexts_len, csi = contexts_len.sort(descending=True)
@@ -73,11 +72,12 @@ def calc_test_accuracy():
                 probs = encoder(contexts, cm, responses, rm)
 
             for i, (prob, label) in enumerate(zip(probs, labels)):
-                if ((prob.item() >= 0.5) and (label.item() == 1.0)) or ((prob.item() < 0.5) and (label.item() == 0.0)):
+                p, l = prob.item(), label.item()
+                if ((p >= 0.5) and (l == 1.0)) or ((p < 0.5) and (l == 0.0)):
                     test_correct_count += 1
-                    logging.info('%s %s %s %s %s', 'o', h(contexts[i]), h(responses[i]), int(label.item()), round(prob.item(), 2))
+                    logging.info('%s %s %s %s %s', 'o', h(contexts[i]), h(responses[i]), int(l), round(p, 2))
                 else:
-                    logging.info('%s %s %s %s %s', 'x', h(contexts[i]), h(responses[i]), int(label.item()), round(prob.item(), 2))
+                    logging.info('%s %s %s %s %s', 'x', h(contexts[i]), h(responses[i]), int(l), round(p, 2))
 
     test_accuracy = test_correct_count / len(test_1)
 
@@ -86,7 +86,7 @@ def calc_test_accuracy():
 def get_recall_at_k():
     recall_at_5_true_hits, recall_at_2_true_hits, recall_at_1_true_hits = 0, 0, 0
 
-    for contexts, contexts_len, responses, responses_len in tqdm(test_10_loader):
+    for contexts, contexts_len, _, _, responses, responses_len in tqdm(test_10_loader):
         with torch.no_grad():
             if text_model == 'lstm':
                 contexts_len, csi = contexts_len.sort(descending=True)
@@ -133,7 +133,7 @@ def get_recall_at_k():
     return recall_at_5, recall_at_2, recall_at_1
 
 
-with open('pkl/' + task + '_dataset.pkl', 'rb') as f:
+with open('../../data/' + task + '_dataset.pkl', 'rb') as f:
     params = pickle.load(f)
     train = params['train']
     test_1 = params['test_1']
@@ -144,11 +144,11 @@ emb_size = train.emb_dim
 vocab_size = len(train.word_to_id)
 if text_model == 'lstm':
     config = get_config('config/lstm_config.json')
-    from text_encoder import TextLstmEncoder
+    from model.text_encoder import TextLstmEncoder
     encoder = TextLstmEncoder(id_to_vec, emb_size, vocab_size, config)
 elif text_model == 'transformer':
     config = get_config('config/transformer_config.json')
-    from text_encoder import TextTransformerEncoder
+    from model.text_encoder import TextTransformerEncoder
     encoder = TextTransformerEncoder(id_to_vec, emb_size, vocab_size, config, device) 
 encoder.load_state_dict(torch.load(path))
 encoder.to(device)

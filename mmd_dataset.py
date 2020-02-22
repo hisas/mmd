@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import MeCab
-import gensim
+from gensim.models import KeyedVectors
 import re
 import torch
 from torch.utils.data import Dataset
@@ -12,7 +12,11 @@ def create_word_to_id_and_id_to_word(df, task):
     id_to_word = {0: '<PAD>', 1: '<UNK>'}
 
     for _, r in df.iterrows():
-        sentences = [r['Context'], r['Action']] if task == 'action' else [r['Context'], r['Response']]
+        if task == 'response':
+            sentences = [r['Context'], r['Response']]
+        elif task == 'action':
+            sentences = [r['Context'], r['Action']]
+
         for sentence in sentences:
             sentence_words = sentence2words(sentence)
             for word in sentence_words:
@@ -40,8 +44,7 @@ def sentence2words(sentence):
     return sentence_words
 
 def create_id_to_vec(word_to_id):
-
-    model = gensim.models.KeyedVectors.load_word2vec_format('../../data/model.vec', binary=False)
+    model = KeyedVectors.load_word2vec_format('data/model.vec', binary=False)
     id_to_vec = {}
 
     for word, id in word_to_id.items():
@@ -68,6 +71,9 @@ def load_ids_and_labels(row, word_to_id, max_len, task):
         context_ids += [0] * (max_len - context_len)
     context = torch.tensor(context_ids, dtype=torch.long)
 
+    image_path = row['Image']
+    gaze = torch.tensor([row['GazeX'], row['GazeY']])
+
     response_ids = []
     sentence = row['Action'] if task == 'action' else row['Response']
     for word in sentence2words(sentence):
@@ -82,7 +88,7 @@ def load_ids_and_labels(row, word_to_id, max_len, task):
 
     label = torch.tensor([row['Label']], dtype=torch.float32)
 
-    return context, context_len, response, response_len, label
+    return context, context_len, image_path, gaze, response, response_len, label
 
 def test_load_ids(i, row, word_to_id, max_len):
     context_ids = []
@@ -96,6 +102,9 @@ def test_load_ids(i, row, word_to_id, max_len):
         context_ids += [0] * (max_len - context_len)
     context = torch.tensor(context_ids, dtype=torch.long)
 
+    image_path = row['Image']
+    gaze = torch.tensor([row['GazeX'], row['GazeY']])
+
     response_ids = []
     for word in sentence2words(row[i]):
         if word in word_to_id:
@@ -107,9 +116,9 @@ def test_load_ids(i, row, word_to_id, max_len):
         response_ids += [0] * (max_len - response_len)
     response = torch.tensor(response_ids, dtype=torch.long)
 
-    return context, context_len, response, response_len
+    return context, context_len, image_path, gaze, response, response_len
 
-class TextDataset(Dataset):
+class MmdDataset(Dataset):
     def __init__(self, path, task, train, max_len):
         df = pd.read_csv(path)
         if train:

@@ -6,7 +6,7 @@ class TextLstmEncoder(nn.Module):
     def __init__(self, id_to_vec, emb_size, vocab_size, config):
         super(TextLstmEncoder, self).__init__()
 
-        from lstm import LstmEncoder
+        from model.lstm import LstmEncoder
         self.encoder = LstmEncoder(id_to_vec, emb_size, vocab_size, config)
         self.hidden_size = config.hidden_size
         M = torch.FloatTensor(self.hidden_size, self.hidden_size)
@@ -35,7 +35,7 @@ class TextTransformerEncoder(nn.Module):
     def __init__(self, id_to_vec, emb_size, vocab_size, config, device='cuda:0'):
         super(TextTransformerEncoder, self).__init__()
 
-        from transformer import TransformerEncoder
+        from model.transformer import TransformerEncoder
         self.encoder = TransformerEncoder(id_to_vec, emb_size, vocab_size, config, device)
         self.hidden_size = config.hidden_size
         M = torch.FloatTensor(self.hidden_size, self.hidden_size)

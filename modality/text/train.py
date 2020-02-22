@@ -2,7 +2,7 @@ import os
 import sys
 import pathlib
 current_dir = pathlib.Path(__file__).resolve().parent
-sys.path.append(str(current_dir) + '/../../models')
+sys.path.append(str(current_dir) + '/../..')
 import argparse
 import json
 from attrdict import AttrDict
@@ -14,7 +14,7 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from datetime import datetime
-from dataset import TextDataset
+from mmd_dataset import MmdDataset
 
 SEED = 0
 random.seed(SEED)
@@ -52,7 +52,7 @@ def train_model(learning_rate, l2_penalty, epochs):
         training_correct_count = 0
         encoder.train()
 
-        for contexts, contexts_len, responses, responses_len, labels in tqdm(train_loader):
+        for contexts, contexts_len, _, _, responses, responses_len, labels in tqdm(train_loader):
             encoder.zero_grad()
 
             if text_model == 'lstm':
@@ -74,7 +74,8 @@ def train_model(learning_rate, l2_penalty, epochs):
             loss.backward()
             optimizer.step()
             for prob, label in zip(probs, labels):
-                if ((prob.item() >= 0.5) and (label.item() == 1.0)) or ((prob.item() < 0.5) and (label.item() == 0.0)):
+                p, l = prob.item(), label.item()
+                if ((p >= 0.5) and (l == 1.0)) or ((p < 0.5) and (l == 0.0)):
                    training_correct_count += 1
 
         training_accuracy = training_correct_count / len(train)
@@ -83,7 +84,7 @@ def train_model(learning_rate, l2_penalty, epochs):
         sum_loss_val = 0.0
         encoder.eval()
 
-        for contexts, contexts_len, responses, responses_len, labels in tqdm(val_loader):
+        for contexts, contexts_len, _, _, responses, responses_len, labels in tqdm(val_loader):
             with torch.no_grad():
                 if text_model == 'lstm':
                     contexts_len, csi = contexts_len.sort(descending=True)
@@ -102,7 +103,8 @@ def train_model(learning_rate, l2_penalty, epochs):
                 loss = criterion(probs, labels)
                 sum_loss_val += loss.item()
                 for prob, label in zip(probs, labels):
-                    if ((prob.item() >= 0.5) and (label.item() == 1.0)) or ((prob.item() < 0.5) and (label.item() == 0.0)):
+                    p, l = prob.item(), label.item()
+                    if ((p >= 0.5) and (l == 1.0)) or ((p < 0.5) and (l == 0.0)):
                        val_correct_count += 1
 
         val_accuracy = val_correct_count / len(val)
@@ -121,7 +123,8 @@ def train_model(learning_rate, l2_penalty, epochs):
                 save_dir = 'models/' + task
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
-                save_path = save_dir + '/' + text_model + '_' + datetime.now().strftime('%Y%m%d%H%M') + '_' + str(val_accuracy)[:5] + '.pt'
+                save_path = save_dir + '/' + text_model + '_' \
+                            + datetime.now().strftime('%Y%m%d%H%M') + '_' + str(val_accuracy)[:5] + '.pt'
                 torch.save(encoder.state_dict(), save_path)
                 print("New best found and saved.")
 
@@ -130,7 +133,7 @@ def train_model(learning_rate, l2_penalty, epochs):
             break
 
 
-with open('pkl/' + task + '_dataset.pkl', 'rb') as f:
+with open('../../data/' + task + '_dataset.pkl', 'rb') as f:
     params = pickle.load(f)
     train = params['train']
     val = params['val']
@@ -145,11 +148,11 @@ vocab_size = len(train.word_to_id)
 
 if text_model == 'lstm':
     config = get_config('config/lstm_config.json')
-    from text_encoder import TextLstmEncoder
+    from model.text_encoder import TextLstmEncoder
     encoder = TextLstmEncoder(id_to_vec, emb_size, vocab_size, config)
 elif text_model == 'transformer':
     config = get_config('config/transformer_config.json')
-    from text_encoder import TextTransformerEncoder
+    from model.text_encoder import TextTransformerEncoder
     encoder = TextTransformerEncoder(id_to_vec, emb_size, vocab_size, config, device) 
 encoder.to(device)
 

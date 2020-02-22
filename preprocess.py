@@ -1,8 +1,10 @@
+import os
+import pickle
 import pandas as pd
 import random
+from mmd_dataset import *
 
 random.seed(0)
-
 
 def extract_gaze(df):
     df_ann = pd.read_csv('data/data_new/train_annotations.txt', delimiter=',', header=None)
@@ -89,7 +91,9 @@ def export_response_test_df(df):
 
     pd.DataFrame(data).to_csv('data/response_test_1.csv', index=False, header=False)
 
-    data = [['Context', 'Image', 'GazeX', 'GazeY', 'Ground Truth Response', 'Distractor_0', 'Distractor_1', 'Distractor_2', 'Distractor_3', 'Distractor_4', 'Distractor_5', 'Distractor_6', 'Distractor_7', 'Distractor_8']]
+    data = [['Context', 'Image', 'GazeX', 'GazeY', 'Ground Truth Response', 'Distractor_0', 'Distractor_1', \
+             'Distractor_2', 'Distractor_3', 'Distractor_4', 'Distractor_5', 'Distractor_6', 'Distractor_7', 'Distractor_8']]
+
     for _, r in df.iterrows():
         while True:
             ts = random.sample(context_response, 9)
@@ -153,7 +157,9 @@ def export_action_test_df(df):
 
     pd.DataFrame(data).to_csv('data/action_test_1.csv', index=False, header=False)
 
-    data = [['Context', 'Image', 'GazeX', 'GazeY', 'Ground Truth Action', 'Distractor_0', 'Distractor_1', 'Distractor_2', 'Distractor_3', 'Distractor_4', 'Distractor_5', 'Distractor_6', 'Distractor_7', 'Distractor_8']]
+    data = [['Context', 'Image', 'GazeX', 'GazeY', 'Ground Truth Action', 'Distractor_0', 'Distractor_1', \
+             'Distractor_2', 'Distractor_3', 'Distractor_4', 'Distractor_5', 'Distractor_6', 'Distractor_7', 'Distractor_8']]
+
     for _, r in df.iterrows():
         while True:
             ts = random.sample(context_action, 9)
@@ -170,13 +176,33 @@ def export_action_test_df(df):
                 break
     pd.DataFrame(data).to_csv('data/action_test_10.csv', index=False, header=False)
 
-
+print('Exporting response_train.csv, response_val.csv, response_test_1.csv and response_test_10.csv')
 train_response_df, val_response_df, test_response_df = filter_response_df('data/jparvsu-response.tsv')
 export_response_df(train_response_df, 'train')
 export_response_df(val_response_df, 'val')
 export_response_test_df(test_response_df)
 
+print('Exporting action_train.csv, action_val.csv, action_test_1.csv and action_test_10.csv')
 train_action_df, val_action_df, test_action_df = filter_action_df('data/jparvsu-response.tsv')
 export_action_df(train_action_df, 'train')
 export_action_df(val_action_df, 'val')
 export_action_test_df(test_action_df)
+
+print('Creating response_dataset.pkl')
+max_len = 40
+params = {}
+params['train'] = MmdDataset('data/response_train.csv', task='response', train=True, max_len=max_len)
+params['val'] = MmdDataset('data/response_val.csv', task='response', train=False, max_len=max_len)
+params['test_1'] = MmdDataset('data/response_test_1.csv', task='response', train=False, max_len=max_len)
+params['test_10'] = MmdDataset('data/response_test_10.csv', task='response', train=False, max_len=max_len)
+with open('data/response_dataset.pkl', 'wb') as f:
+    pickle.dump(params, f, -1)
+
+print('Creating action_dataset.pkl')
+params = {}
+params['train'] = MmdDataset('data/action_train.csv', task='action', train=True, max_len=max_len)
+params['val'] = MmdDataset('data/action_val.csv', task='action', train=False, max_len=max_len)
+params['test_1'] = MmdDataset('data/action_test_1.csv', task='action', train=False, max_len=max_len)
+params['test_10'] = MmdDataset('data/action_test_10.csv', task='action', train=False, max_len=max_len)
+with open('data/action_dataset.pkl', 'wb') as f:
+    pickle.dump(params, f, -1)
