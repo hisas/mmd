@@ -42,3 +42,8 @@ Options:
 2. `$ python train.py --task action --text_model transformer --image_model vgg --synthesis_method matmul`
 3. `$ python eval.py --path <path> --log`
 
+### Text, Image and Gaze Modality
+
+1. `$ cd modality/text_image_gaze`
+2. `$ python train.py --task action --text_model transformer --image_model vgg --synthesis_method matmul`
+3. `$ python eval.py --path <path> --log`
