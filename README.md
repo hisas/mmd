@@ -12,8 +12,33 @@
 
 ## Usage
 
+### Train options
+```
+Options:
+
+    --task                response or action
+    --text_model          lstm or transformer
+    --image_model         vgg
+    --synthesis_method    matmul or concat
+```
+
+### Eval options
+```
+Options:
+
+    --path    saved model path
+    --log     output log
+```
+
 ### Text modality
 
 1. `$ cd modality/text`
 2. `$ python train.py --task response --text_model lstm`
-3. `$ python eval.py --path models/response/lstm_*.pt --log`
+3. `$ python eval.py --path <path> --log`
+
+### Text and Image Modality
+
+1. `$ cd modality/text_image`
+2. `$ python train.py --task action --text_model transformer --image_model vgg --synthesis_method matmul`
+3. `$ python eval.py --path <path> --log`
+
