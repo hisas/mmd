@@ -1,1 +1,8 @@
+attrdict
 efficientnet_pytorch
+gensim
+numpy
+mecab-python3
+pandas
+torch
+torchvision

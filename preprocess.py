@@ -1,7 +1,10 @@
 import os
+import subprocess
 import pickle
 import pandas as pd
 import random
+import zipfile
+from urllib.request import urlretrieve
 from mmd_dataset import *
 
 random.seed(0)
@@ -176,14 +179,21 @@ def export_action_test_df(df):
                 break
     pd.DataFrame(data).to_csv('data/action_test_10.csv', index=False, header=False)
 
+print('Downloading file')
+os.mkdir('data')
+urlretrieve('http://gazefollow.csail.mit.edu/downloads/data.zip', 'data/data.zip')
+subprocess.call('unzip -q data/data.zip -d data', shell=True)
+os.remove('data/data.zip')
+subprocess.call('unzip -q original_data/vector.zip -d data', shell=True)
+
 print('Exporting response_train.csv, response_val.csv, response_test_1.csv and response_test_10.csv')
-train_response_df, val_response_df, test_response_df = filter_response_df('data/jparvsu-response.tsv')
+train_response_df, val_response_df, test_response_df = filter_response_df('original_data/jparvsu-response.tsv')
 export_response_df(train_response_df, 'train')
 export_response_df(val_response_df, 'val')
 export_response_test_df(test_response_df)
 
 print('Exporting action_train.csv, action_val.csv, action_test_1.csv and action_test_10.csv')
-train_action_df, val_action_df, test_action_df = filter_action_df('data/jparvsu-response.tsv')
+train_action_df, val_action_df, test_action_df = filter_action_df('original_data/jparvsu-response.tsv')
 export_action_df(train_action_df, 'train')
 export_action_df(val_action_df, 'val')
 export_action_test_df(test_action_df)
