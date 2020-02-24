@@ -13,6 +13,10 @@ class TextImageGazeLstmEncoder(nn.Module):
         if image_model == 'vgg':
             from model.vgg import VggEncoder
             self.image_gaze_encoder = VggEncoder(self.hidden_size, gaze=True)
+        elif image_model == 'resnet':
+            from model.resnet import ResNetEncoder
+            self.image_encoder = ResNetEncoder(self.hidden_size)
+
         from model.lstm import LstmEncoder
         self.text_encoder = LstmEncoder(id_to_vec, emb_size, vocab_size, config)
         M = torch.FloatTensor(self.hidden_size, self.hidden_size)
@@ -61,6 +65,10 @@ class TextImageGazeTransformerEncoder(nn.Module):
         if image_model == 'vgg':
             from model.vgg import VggEncoder
             self.image_gaze_encoder = VggEncoder(self.hidden_size, gaze=True)
+        elif image_model == 'resnet':
+            from model.resnet import ResNetEncoder
+            self.image_encoder = ResNetEncoder(self.hidden_size)
+
         from model.transformer import TransformerEncoder
         self.text_encoder = TransformerEncoder(id_to_vec, emb_size, vocab_size, config, device)
         M = torch.FloatTensor(self.hidden_size, self.hidden_size)

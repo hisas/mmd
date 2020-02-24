@@ -18,7 +18,7 @@ Options:
 
     --task                response or action
     --text_model          lstm or transformer
-    --image_model         vgg
+    --image_model         vgg or resnet
     --synthesis_method    matmul or concat
 ```
 

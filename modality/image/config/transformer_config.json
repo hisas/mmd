@@ -1,0 +1,6 @@
+{
+    "hidden_size": 100,
+    "dropout": 0.2,
+    "nhead": 6,
+    "d_model": 300
+}
