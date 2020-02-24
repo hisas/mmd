@@ -16,6 +16,9 @@ class TextImageGazeLstmEncoder(nn.Module):
         elif image_model == 'resnet':
             from model.resnet import ResNetEncoder
             self.image_encoder = ResNetEncoder(self.hidden_size)
+        elif image_model == 'efficientnet':
+            from model.efficientnet import EfficientNetEncoder
+            self.image_encoder = EfficientNetEncoder(self.hidden_size)
 
         from model.lstm import LstmEncoder
         self.text_encoder = LstmEncoder(id_to_vec, emb_size, vocab_size, config)
@@ -68,6 +71,9 @@ class TextImageGazeTransformerEncoder(nn.Module):
         elif image_model == 'resnet':
             from model.resnet import ResNetEncoder
             self.image_encoder = ResNetEncoder(self.hidden_size)
+        elif image_model == 'efficientnet':
+            from model.efficientnet import EfficientNetEncoder
+            self.image_encoder = EfficientNetEncoder(self.hidden_size)
 
         from model.transformer import TransformerEncoder
         self.text_encoder = TransformerEncoder(id_to_vec, emb_size, vocab_size, config, device)
