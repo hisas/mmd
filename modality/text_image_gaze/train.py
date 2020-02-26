@@ -77,6 +77,10 @@ def train_model(learning_rate, l2_penalty, epochs):
                 contexts, responses, labels = contexts.to(device), responses.to(device), labels.to(device)
                 cm, rm = (contexts != 0).unsqueeze(-2), (responses != 0).unsqueeze(-2)
                 probs = encoder(contexts, cm, images, gazes, responses, rm)
+            elif text_model == 'bert':
+                contexts, responses, labels = contexts.to(device), responses.to(device), labels.to(device)
+                cm, rm = (contexts != 0).int(), (responses != 0).int()
+                probs = encoder(contexts, cm, images, gazes, responses, rm)
 
             loss = criterion(probs, labels)
             sum_loss_training += loss.item()
@@ -112,6 +116,10 @@ def train_model(learning_rate, l2_penalty, epochs):
                     contexts, responses, labels = contexts.to(device), responses.to(device), labels.to(device)
                     cm, rm = (contexts != 0).unsqueeze(-2), (responses != 0).unsqueeze(-2)
                     probs = encoder(contexts, cm, images, gazes, responses, rm)
+                elif text_model == 'bert':
+                    contexts, responses, labels = contexts.to(device), responses.to(device), labels.to(device)
+                    cm, rm = (contexts != 0).int(), (responses != 0).int()
+                    probs = encoder(contexts, cm, images, gazes, responses, rm)
 
                 loss = criterion(probs, labels)
                 sum_loss_val += loss.item()
@@ -146,7 +154,11 @@ def train_model(learning_rate, l2_penalty, epochs):
             break
 
 
-with open('../../data/' + task + '_dataset.pkl', 'rb') as f:
+if text_model == 'bert':
+    data_path = '../../data/' + task + '_bert_dataset.pkl'
+else:
+    data_path = '../../data/' + task + '_dataset.pkl'
+with open(data_path, 'rb') as f:
     params = pickle.load(f)
     train = params['train']
     val = params['val']
@@ -155,18 +167,21 @@ batch_size = 64
 train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=4)
 val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=4)
 
-id_to_vec = train.id_to_vec
-emb_size = train.emb_dim
-vocab_size = len(train.word_to_id)
+if text_model != 'bert':
+    id_to_vec = train.id_to_vec
+    emb_size = train.emb_dim
+    vocab_size = len(train.word_to_id)
 
+config = get_config('config/' + text_model + '_config.json')
 if text_model == 'lstm':
-    config = get_config('config/lstm_config.json')
     from model.text_image_gaze_encoder import TextImageGazeLstmEncoder
     encoder = TextImageGazeLstmEncoder(image_model, synthesis_method, id_to_vec, emb_size, vocab_size, config)
 elif text_model == 'transformer':
-    config = get_config('config/transformer_config.json')
     from model.text_image_gaze_encoder import TextImageGazeTransformerEncoder
     encoder = TextImageGazeTransformerEncoder(image_model, synthesis_method, id_to_vec, emb_size, vocab_size, config, device) 
+elif text_model == 'bert':
+    from model.text_image_encoder import TextImageGazeBertEncoder
+    encoder = TextImageGazeBertEncoder(image_model, synthesis_method, config)
 encoder.to(device)
 
 train_model(learning_rate=0.0001, l2_penalty=0.0001, epochs=50)

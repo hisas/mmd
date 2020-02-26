@@ -52,3 +52,25 @@ class TextTransformerEncoder(nn.Module):
         probs = torch.sigmoid(score.view(-1, 1))
 
         return probs
+
+class TextBertEncoder(nn.Module):
+    def __init__(self, config):
+        super(TextBertEncoder, self).__init__()
+
+        from model.bert import BertEncoder
+        self.encoder = BertEncoder(config)
+        self.hidden_size = config.hidden_size
+        M = torch.FloatTensor(self.hidden_size, self.hidden_size)
+        init.xavier_normal_(M)
+        self.M = nn.Parameter(M, requires_grad=True)
+
+    def forward(self, contexts, cm, responses, rm):
+        contexts_first = self.encoder(contexts, cm)
+        responses_first = self.encoder(responses, rm)
+        contexts = contexts_first.mm(self.M)
+        contexts = contexts.view(-1, 1, self.hidden_size)
+        responses = responses_first.view(-1, self.hidden_size, 1)
+        score = torch.bmm(contexts, responses)
+        probs = torch.sigmoid(score.view(-1, 1))
+
+        return probs

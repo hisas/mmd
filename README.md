@@ -12,7 +12,7 @@
 Options:
 
     --task                response or action
-    --text_model          lstm or transformer
+    --text_model          lstm or transformer or bert
     --image_model         vgg or resnet or efficientnet
     --synthesis_method    matmul or concat
 ```
