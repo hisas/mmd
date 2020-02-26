@@ -6,3 +6,4 @@ mecab-python3
 pandas
 torch
 torchvision
+transformers
