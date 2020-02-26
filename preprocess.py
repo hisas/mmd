@@ -6,6 +6,7 @@ import random
 import zipfile
 from urllib.request import urlretrieve
 from mmd_dataset import *
+from mmd_bert_dataset import *
 
 random.seed(0)
 
@@ -215,4 +216,22 @@ params['val'] = MmdDataset('data/action_val.csv', task='action', train=False, ma
 params['test_1'] = MmdDataset('data/action_test_1.csv', task='action', train=False, max_len=max_len)
 params['test_10'] = MmdDataset('data/action_test_10.csv', task='action', train=False, max_len=max_len)
 with open('data/action_dataset.pkl', 'wb') as f:
+    pickle.dump(params, f, -1)
+
+print('Creating response_bert_dataset.pkl')
+params = {}
+params['train'] = MmdBertDataset('data/response_train.csv', task='response', train=True)
+params['val'] = MmdBertDataset('data/response_val.csv', task='response', train=False)
+params['test_1'] = MmdBertDataset('data/response_test_1.csv', task='response', train=False)
+params['test_10'] = MmdBertDataset('data/response_test_10.csv', task='response', train=False)
+with open('data/response_bert_dataset.pkl', 'wb') as f:
+    pickle.dump(params, f, -1)
+
+print('Creating action_bert_dataset.pkl')
+params = {}
+params['train'] = MmdBertDataset('data/action_train.csv', task='action', train=True)
+params['val'] = MmdBertDataset('data/action_val.csv', task='action', train=False)
+params['test_1'] = MmdBertDataset('data/action_test_1.csv', task='action', train=False)
+params['test_10'] = MmdBertDataset('data/action_test_10.csv', task='action', train=False)
+with open('data/action_bert_dataset.pkl', 'wb') as f:
     pickle.dump(params, f, -1)
