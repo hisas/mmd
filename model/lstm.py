@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+
 class LstmEncoder(nn.Module):
     def __init__(self, id_to_vec, emb_size, vocab_size, config):
         super(LstmEncoder, self).__init__()
@@ -26,4 +27,3 @@ class LstmEncoder(nn.Module):
             embedding_weights[id] = vec
 
         self.embedding.weight = nn.Parameter(embedding_weights, requires_grad=True)
-

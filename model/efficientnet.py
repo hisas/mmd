@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from efficientnet_pytorch import EfficientNet
 
+
 class EfficientNetEncoder(nn.Module):
     def __init__(self, embed_size, gaze=False):
         super(EfficientNetEncoder, self).__init__()

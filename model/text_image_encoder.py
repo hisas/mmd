@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch.nn import init
 
+
 class TextImageLstmEncoder(nn.Module):
     def __init__(self, image_model, synthesis_method, id_to_vec, emb_size, vocab_size, config):
         super(TextImageLstmEncoder, self).__init__()
@@ -152,4 +153,3 @@ class TextImageBertEncoder(nn.Module):
             prob = torch.sigmoid(score).view(-1, 1)
 
         return prob
-

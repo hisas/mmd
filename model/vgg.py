@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torchvision import models
 
+
 class VggEncoder(nn.Module):
     def __init__(self, embed_size, gaze=False):
         super(VggEncoder, self).__init__()

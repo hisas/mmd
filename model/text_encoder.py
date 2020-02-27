@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch.nn import init
 
+
 class TextLstmEncoder(nn.Module):
     def __init__(self, id_to_vec, emb_size, vocab_size, config):
         super(TextLstmEncoder, self).__init__()

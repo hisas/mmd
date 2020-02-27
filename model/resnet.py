@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torchvision import models
 
+
 class ResNetEncoder(nn.Module):
     def __init__(self, embed_size, gaze=False):
         super(ResNetEncoder, self).__init__()

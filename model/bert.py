@@ -1,6 +1,7 @@
 from torch import nn
 from transformers import BertModel
 
+
 class BertEncoder(nn.Module):
     def __init__(self, config):
         super(BertEncoder, self).__init__()

@@ -1,7 +1,9 @@
 import pathlib
+
 import torch
-from torchvision import transforms
 from PIL import Image
+from torchvision import transforms
+
 
 class ImageTransform():
     def __init__(self, resize=224, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
@@ -36,4 +38,3 @@ def fetch_images(paths, phase):
         images[i] = transform_image(path, phase)
 
     return images
-

@@ -1,17 +1,19 @@
-import os
-import re
-import sys
-import pathlib
 import argparse
 import json
-from attrdict import AttrDict
-import pickle
-from datetime import datetime
 import logging
-from tqdm import tqdm
+import os
+import pathlib
+import pickle
+import re
+import sys
+from datetime import datetime
+
 import torch
+from attrdict import AttrDict
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 from transformers import BertJapaneseTokenizer
+
 from helper.image_helper import *
 
 current_dir = pathlib.Path(__file__).resolve().parent

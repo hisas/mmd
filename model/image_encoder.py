@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch.nn import init
 
+
 class ImageLstmEncoder(nn.Module):
     def __init__(self, image_model, id_to_vec, emb_size, vocab_size, config):
         super(ImageLstmEncoder, self).__init__()

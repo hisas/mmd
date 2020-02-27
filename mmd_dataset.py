@@ -1,11 +1,13 @@
 import os
+import re
+
+import MeCab
 import numpy as np
 import pandas as pd
-import MeCab
-from gensim.models import KeyedVectors
-import re
 import torch
+from gensim.models import KeyedVectors
 from torch.utils.data import Dataset
+
 
 def create_word_to_id_and_id_to_word(df, task):
     word_to_id = {'<PAD>': 0, '<UNK>': 1}
@@ -141,4 +143,3 @@ class MmdDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.crl[idx]
-

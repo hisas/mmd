@@ -1,12 +1,14 @@
 import os
-import subprocess
 import pickle
-import pandas as pd
 import random
+import subprocess
 import zipfile
 from urllib.request import urlretrieve
-from mmd_dataset import *
+
+import pandas as pd
+
 from mmd_bert_dataset import *
+from mmd_dataset import *
 
 random.seed(0)
 

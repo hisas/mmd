@@ -1,21 +1,24 @@
-import os
-import sys
-import pathlib
-current_dir = pathlib.Path(__file__).resolve().parent
-sys.path.append(str(current_dir) + '/../..')
 import argparse
 import json
-from attrdict import AttrDict
-import numpy as np
-import random
+import os
+import pathlib
 import pickle
+import random
+import sys
+from datetime import datetime
+
+import numpy as np
 import torch
+from attrdict import AttrDict
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from datetime import datetime
-from mmd_dataset import MmdDataset
+
 from helper.image_helper import *
+from mmd_dataset import MmdDataset
+
+current_dir = pathlib.Path(__file__).resolve().parent
+sys.path.append(str(current_dir) + '/../..')
 
 SEED = 0
 random.seed(SEED)

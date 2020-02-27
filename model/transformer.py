@@ -1,8 +1,10 @@
 import math
+
 import torch
+import torch.nn.functional as F
 from torch import nn
 from torch.nn import init
-import torch.nn.functional as F
+
 
 class PositionalEncoder(nn.Module):
     def __init__(self, d_model, device, max_seq_len=40):
@@ -149,4 +151,3 @@ class TransformerEncoder(nn.Module):
         out = self.aggregator(x)
 
         return out
-
