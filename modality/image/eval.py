@@ -1,8 +1,7 @@
 import os
+import re
 import sys
 import pathlib
-current_dir = pathlib.Path(__file__).resolve().parent
-sys.path.append(str(current_dir) + '/../..')
 import argparse
 import json
 from attrdict import AttrDict
@@ -12,8 +11,11 @@ import logging
 from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
+from transformers import BertJapaneseTokenizer
 from helper.image_helper import *
 
+current_dir = pathlib.Path(__file__).resolve().parent
+sys.path.append(str(current_dir) + '/../..')
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -27,7 +29,9 @@ task = path.split('/')[1]
 text_model = path.split('/')[2].split('_')[0]
 image_model = path.split('/')[2].split('_')[1] 
 
-if log:
+tokenizer = BertJapaneseTokenizer.from_pretrained('bert-base-japanese-whole-word-masking')
+
+def set_log():
     save_dir = 'log/' + task
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -35,7 +39,6 @@ if log:
     filename = save_dir + '/' + text_model + '_' + image_model + '_' \
                + synthesis_method + '_' + datetime.now().strftime('%Y%m%d%H%M') + '.log'
     logging.basicConfig(filename=filename, level=logging.DEBUG, format=format)
-
 
 def get_config(file_path):
     config_file = file_path
@@ -46,15 +49,21 @@ def get_config(file_path):
     return config
 
 def h(sentence_ids):
-    ans = ''
-    for it in sentence_ids:
-        i = it.item()
-        if i == 0:
-            break
-        else:
-            ans += train.id_to_word[i]
+    if text_model == 'bert':
+        tokens = tokenizer.convert_ids_to_tokens(sentence_ids)
+        remove_tokens = ['[CLS]', '[PAD]', '[SEP]']
+        sentence = ''.join([t for t in tokens if t not in(['[CLS]', '[PAD]', '[SEP]'])])
+        sentence = re.sub(r'##', '', sentence)
+    else:
+        sentence = ''
+        for si in sentence_ids:
+            i = si.item()
+            if i == 0:
+                break
+            else:
+                sentence += train.id_to_word[i]
 
-    return ans
+    return sentence
 
 def calc_test_accuracy():
     test_correct_count = 0
@@ -74,14 +83,18 @@ def calc_test_accuracy():
                 responses, labels = responses.to(device), labels.to(device)
                 rm = (responses != 0).unsqueeze(-2)
                 probs = encoder(images, responses, rm)
+            elif text_model == 'bert':
+                responses, labels = responses.to(device), labels.to(device)
+                rm = (responses != 0).int()
+                probs = encoder(images, responses, rm)
 
             for i, (prob, label) in enumerate(zip(probs, labels)):
                 p, l = prob.item(), label.item()
                 if ((p >= 0.5) and (l == 1.0)) or ((p < 0.5) and (l == 0.0)):
                     test_correct_count += 1
-                    logging.info('%s %s %s %s %s', 'o', images_path[i], h(responses[i]), int(l), round(p, 2))
+                    logging.info('%s %s %s %s %s', 'o', h(contexts[i]), h(responses[i]), int(l), round(p, 2))
                 else:
-                    logging.info('%s %s %s %s %s', 'x', images_path[i], h(responses[i]), int(l), round(p, 2))
+                    logging.info('%s %s %s %s %s', 'x', h(contexts[i]), h(responses[i]), int(l), round(p, 2))
 
     test_accuracy = test_correct_count / len(test_1)
 
@@ -103,6 +116,10 @@ def get_recall_at_k():
             elif text_model == 'transformer':
                 responses = responses.to(device)
                 rm = (responses != 0).unsqueeze(-2)
+                probs = encoder(images, responses, rm)
+            elif text_model == 'bert':
+                responses = responses.to(device)
+                rm = (responses != 0).int()
                 probs = encoder(images, responses, rm)
             
             msg = ''
@@ -126,7 +143,7 @@ def get_recall_at_k():
             else:
                 msg += 'x'
 
-            logging.info('%s %s %s', msg, images_path[0], h(responses[0]))
+            logging.info('%s %s %s', msg, h(contexts[0]), h(responses[0]))
             for r, p in zip(responses[sorted_idx], sorted_probs):
                 logging.info('%s %s %s', '\t', h(r[0]), p.item())
 
@@ -137,26 +154,37 @@ def get_recall_at_k():
     return recall_at_5, recall_at_2, recall_at_1
 
 
-with open('../../data/' + task + '_dataset.pkl', 'rb') as f:
+if text_model == 'bert':
+    data_path = '../../data/' + task + '_bert_dataset.pkl'
+else:
+    data_path = '../../data/' + task + '_dataset.pkl'
+with open(data_path, 'rb') as f:
     params = pickle.load(f)
     train = params['train']
     test_1 = params['test_1']
     test_10 = params['test_10']
 
-id_to_vec = train.id_to_vec
-emb_size = train.emb_dim
-vocab_size = len(train.word_to_id)
+if text_model != 'bert':
+    id_to_vec = train.id_to_vec
+    emb_size = train.emb_dim
+    vocab_size = len(train.word_to_id)
+
+config = get_config('config/' + text_model + '_config.json')
 if text_model == 'lstm':
-    config = get_config('config/lstm_config.json')
     from model.image_encoder import ImageLstmEncoder
     encoder = ImageLstmEncoder(image_model, id_to_vec, emb_size, vocab_size, config)
 elif text_model == 'transformer':
-    config = get_config('config/transformer_config.json')
     from model.image_encoder import ImageTransformerEncoder
-    encoder = ImageTransformerEncoder(image_model, id_to_vec, emb_size, vocab_size, config, device) 
+    encoder = ImageTransformerEncoder(image_model, id_to_vec, emb_size, vocab_size, config, device)
+elif text_model == 'bert':
+    from model.image_encoder import ImageBertEncoder
+    encoder = ImageBertEncoder(image_model, config)
 encoder.load_state_dict(torch.load(path))
 encoder.to(device)
 encoder.eval()
+
+if log:
+    set_log()
 
 test_1_loader = DataLoader(test_1, batch_size=64, shuffle=False, num_workers=4)
 print("Test accuracy", calc_test_accuracy())

@@ -1,8 +1,7 @@
 import os
+import re
 import sys
 import pathlib
-current_dir = pathlib.Path(__file__).resolve().parent
-sys.path.append(str(current_dir) + '/../..')
 import argparse
 import json
 from attrdict import AttrDict
@@ -12,6 +11,10 @@ import logging
 from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
+from transformers import BertJapaneseTokenizer
+
+current_dir = pathlib.Path(__file__).resolve().parent
+sys.path.append(str(current_dir) + '/../..')
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -24,14 +27,15 @@ log = args.log
 task = path.split('/')[1] 
 text_model = path.split('/')[2].split('_')[0]
 
-if log:
+tokenizer = BertJapaneseTokenizer.from_pretrained('bert-base-japanese-whole-word-masking')
+
+def set_log():
     save_dir = 'log/' + task
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     format = '%(message)s'
     filename = save_dir + '/' + text_model + '_' + datetime.now().strftime('%Y%m%d%H%M') + '.log'
     logging.basicConfig(filename=filename, level=logging.DEBUG, format=format)
-
 
 def get_config(file_path):
     config_file = file_path
@@ -42,15 +46,21 @@ def get_config(file_path):
     return config
 
 def h(sentence_ids):
-    ans = ''
-    for it in sentence_ids:
-        i = it.item()
-        if i == 0:
-            break
-        else:
-            ans += train.id_to_word[i]
+    if text_model == 'bert':
+        tokens = tokenizer.convert_ids_to_tokens(sentence_ids)
+        remove_tokens = ['[CLS]', '[PAD]', '[SEP]']
+        sentence = ''.join([t for t in tokens if t not in(['[CLS]', '[PAD]', '[SEP]'])])
+        sentence = re.sub(r'##', '', sentence)
+    else:
+        sentence = ''
+        for si in sentence_ids:
+            i = si.item()
+            if i == 0:
+                break
+            else:
+                sentence += train.id_to_word[i]
 
-    return ans
+    return sentence
 
 def calc_test_accuracy():
     test_correct_count = 0
@@ -69,6 +79,10 @@ def calc_test_accuracy():
             elif text_model == 'transformer':
                 contexts, responses, labels = contexts.to(device), responses.to(device), labels.to(device)
                 cm, rm = (contexts != 0).unsqueeze(-2), (responses != 0).unsqueeze(-2)
+                probs = encoder(contexts, cm, responses, rm)
+            elif text_model == 'bert':
+                contexts, responses, labels = contexts.to(device), responses.to(device), labels.to(device)
+                cm, rm = (contexts != 0).int(), (responses != 0).int()
                 probs = encoder(contexts, cm, responses, rm)
 
             for i, (prob, label) in enumerate(zip(probs, labels)):
@@ -99,6 +113,10 @@ def get_recall_at_k():
             elif text_model == 'transformer':
                 contexts, responses = contexts.to(device), responses.to(device)
                 cm, rm = (contexts != 0).unsqueeze(-2), (responses != 0).unsqueeze(-2)
+                probs = encoder(contexts, cm, responses, rm)
+            elif text_model == 'bert':
+                contexts, responses = contexts.to(device), responses.to(device)
+                cm, rm = (contexts != 0).int(), (responses != 0).int()
                 probs = encoder(contexts, cm, responses, rm)
             
             msg = ''
@@ -133,26 +151,37 @@ def get_recall_at_k():
     return recall_at_5, recall_at_2, recall_at_1
 
 
-with open('../../data/' + task + '_dataset.pkl', 'rb') as f:
+if text_model == 'bert':
+    data_path = '../../data/' + task + '_bert_dataset.pkl'
+else:
+    data_path = '../../data/' + task + '_dataset.pkl'
+with open(data_path, 'rb') as f:
     params = pickle.load(f)
     train = params['train']
     test_1 = params['test_1']
     test_10 = params['test_10']
 
-id_to_vec = train.id_to_vec
-emb_size = train.emb_dim
-vocab_size = len(train.word_to_id)
+if text_model != 'bert':
+    id_to_vec = train.id_to_vec
+    emb_size = train.emb_dim
+    vocab_size = len(train.word_to_id)
+
+config = get_config('config/' + text_model + '_config.json')
 if text_model == 'lstm':
-    config = get_config('config/lstm_config.json')
     from model.text_encoder import TextLstmEncoder
     encoder = TextLstmEncoder(id_to_vec, emb_size, vocab_size, config)
 elif text_model == 'transformer':
-    config = get_config('config/transformer_config.json')
     from model.text_encoder import TextTransformerEncoder
-    encoder = TextTransformerEncoder(id_to_vec, emb_size, vocab_size, config, device) 
+    encoder = TextTransformerEncoder(id_to_vec, emb_size, vocab_size, config, device)
+elif text_model == 'bert':
+    from model.text_encoder import TextBertEncoder
+    encoder = TextBertEncoder(config)
 encoder.load_state_dict(torch.load(path))
 encoder.to(device)
 encoder.eval()
+
+if log:
+    set_log()
 
 test_1_loader = DataLoader(test_1, batch_size=64, shuffle=False, num_workers=4)
 print("Test accuracy", calc_test_accuracy())
@@ -161,4 +190,3 @@ logging.info('\n')
 
 test_10_loader = DataLoader(test_10, batch_size=10, shuffle=False, num_workers=4)
 print("Recall at k", get_recall_at_k())
-

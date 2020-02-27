@@ -71,6 +71,10 @@ def train_model(learning_rate, l2_penalty, epochs):
                 responses, labels = responses.to(device), labels.to(device)
                 rm = (responses != 0).unsqueeze(-2)
                 probs = encoder(images, responses, rm)
+            elif text_model == 'bert':
+                responses, labels = responses.to(device), labels.to(device)
+                rm = (responses != 0).int()
+                probs = encoder(images, responses, rm)
 
             loss = criterion(probs, labels)
             sum_loss_training += loss.item()
@@ -101,6 +105,10 @@ def train_model(learning_rate, l2_penalty, epochs):
                 elif text_model == 'transformer':
                     responses, labels = responses.to(device), labels.to(device)
                     rm = (responses != 0).unsqueeze(-2)
+                    probs = encoder(images, responses, rm)
+                elif text_model == 'bert':
+                    responses, labels = responses.to(device), labels.to(device)
+                    rm = (responses != 0).int()
                     probs = encoder(images, responses, rm)
 
                 loss = criterion(probs, labels)
@@ -136,7 +144,11 @@ def train_model(learning_rate, l2_penalty, epochs):
             break
 
 
-with open('../../data/' + task + '_dataset.pkl', 'rb') as f:
+if text_model == 'bert':
+    data_path = '../../data/' + task + '_bert_dataset.pkl'
+else:
+    data_path = '../../data/' + task + '_dataset.pkl'
+with open(data_path, 'rb') as f:
     params = pickle.load(f)
     train = params['train']
     val = params['val']
@@ -145,18 +157,21 @@ batch_size = 64
 train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=4)
 val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=4)
 
-id_to_vec = train.id_to_vec
-emb_size = train.emb_dim
-vocab_size = len(train.word_to_id)
+if text_model != 'bert':
+    id_to_vec = train.id_to_vec
+    emb_size = train.emb_dim
+    vocab_size = len(train.word_to_id)
 
+config = get_config('config/' + text_model + '_config.json')
 if text_model == 'lstm':
-    config = get_config('config/lstm_config.json')
     from model.image_encoder import ImageLstmEncoder
     encoder = ImageLstmEncoder(image_model, id_to_vec, emb_size, vocab_size, config)
 elif text_model == 'transformer':
-    config = get_config('config/transformer_config.json')
     from model.image_encoder import ImageTransformerEncoder
     encoder = ImageTransformerEncoder(image_model, id_to_vec, emb_size, vocab_size, config, device) 
+elif text_model == 'bert':
+    from model.image_encoder import ImageBertEncoder
+    encoder = ImageBertEncoder(config)
 encoder.to(device)
 
 train_model(learning_rate=0.0001, l2_penalty=0.0001, epochs=50)
