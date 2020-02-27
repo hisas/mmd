@@ -53,7 +53,7 @@ def train_model(learning_rate, l2_penalty, epochs):
     criterion = nn.BCELoss()
     best_val_accuracy = 0.0
 
-    for epoch in range(epochs):
+    for epoch in range(1, epochs+1):
         sum_loss_training = 0.0
         training_correct_count = 0
         encoder.train()
