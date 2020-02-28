@@ -28,7 +28,7 @@ log = args.log
 task = path.split('/')[1] 
 text_model = path.split('/')[2].split('_')[0]
 image_model = path.split('/')[2].split('_')[1] 
-synthesis_method = path.split('/')[2].split('_')[2]
+joint_method = path.split('/')[2].split('_')[2]
 
 tokenizer = BertJapaneseTokenizer.from_pretrained('bert-base-japanese-whole-word-masking')
 
@@ -38,7 +38,7 @@ def set_log():
         os.makedirs(save_dir)
     format = '%(message)s'
     filename = save_dir + '/' + text_model + '_' + image_model + '_' \
-               + synthesis_method + '_' + datetime.now().strftime('%Y%m%d%H%M') + '.log'
+               + joint_method + '_' + datetime.now().strftime('%Y%m%d%H%M') + '.log'
     logging.basicConfig(filename=filename, level=logging.DEBUG, format=format)
 
 def get_config(file_path):
@@ -179,13 +179,13 @@ if text_model != 'bert':
 config = get_config('config/' + text_model + '_config.json')
 if text_model == 'lstm':
     from model.text_image_encoder import TextImageLstmEncoder
-    encoder = TextImageLstmEncoder(image_model, synthesis_method, id_to_vec, emb_size, vocab_size, config)
+    encoder = TextImageLstmEncoder(image_model, joint_method, id_to_vec, emb_size, vocab_size, config)
 elif text_model == 'transformer':
     from model.text_image_encoder import TextImageTransformerEncoder
-    encoder = TextImageTransformerEncoder(image_model, synthesis_method, id_to_vec, emb_size, vocab_size, config, device)
+    encoder = TextImageTransformerEncoder(image_model, joint_method, id_to_vec, emb_size, vocab_size, config, device)
 elif text_model == 'bert':
     from model.text_image_encoder import TextImageBertEncoder
-    encoder = TextImageBertEncoder(image_model, synthesis_method, config)
+    encoder = TextImageBertEncoder(image_model, joint_method, config)
 encoder.load_state_dict(torch.load(path))
 encoder.to(device)
 encoder.eval()

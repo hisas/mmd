@@ -4,12 +4,12 @@ from torch.nn import init
 
 
 class TextImageLstmEncoder(nn.Module):
-    def __init__(self, image_model, synthesis_method, id_to_vec, emb_size, vocab_size, config):
+    def __init__(self, image_model, joint_method, id_to_vec, emb_size, vocab_size, config):
         super(TextImageLstmEncoder, self).__init__()
 
         self.hidden_size = config.hidden_size
-        self.synthesis_method = synthesis_method
-        if synthesis_method == 'concat':
+        self.joint_method = joint_method
+        if joint_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
         if image_model == 'vgg':
             from model.vgg import VggEncoder
@@ -38,7 +38,7 @@ class TextImageLstmEncoder(nn.Module):
         for i, v in enumerate(rsi):
             sorted_r[v] = responses_last_hidden[i]
 
-        if self.synthesis_method == 'matmul':
+        if self.joint_method == 'late':
             contexts = sorted_c.mm(self.M)
             contexts = contexts.view(-1, 1, self.hidden_size)
             images = images_feature.view(-1, 1, self.hidden_size)
@@ -46,7 +46,7 @@ class TextImageLstmEncoder(nn.Module):
             score_1, score_2 = torch.bmm(contexts, responses), torch.bmm(images, responses)
             probs_1, probs_2 = torch.sigmoid(score_1), torch.sigmoid(score_2)
             prob = torch.bmm(probs_1, probs_2).view(-1, 1)
-        elif self.synthesis_method == 'concat':
+        elif self.joint_method == 'concat':
             contexts_images = self.fc(torch.cat((sorted_c, images_feature), dim=1))
             responses_images = self.fc(torch.cat((sorted_r, images_feature), dim=1))
             contexts_images = contexts_images.mm(self.M)
@@ -59,12 +59,12 @@ class TextImageLstmEncoder(nn.Module):
 
 
 class TextImageTransformerEncoder(nn.Module):
-    def __init__(self, image_model, synthesis_method, id_to_vec, emb_size, vocab_size, config, device='cuda:0'):
+    def __init__(self, image_model, joint_method, id_to_vec, emb_size, vocab_size, config, device='cuda:0'):
         super(TextImageTransformerEncoder, self).__init__()
 
         self.hidden_size = config.hidden_size
-        self.synthesis_method = synthesis_method
-        if synthesis_method == 'concat':
+        self.joint_method = joint_method
+        if joint_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
         if image_model == 'vgg':
             from model.vgg import VggEncoder
@@ -87,7 +87,7 @@ class TextImageTransformerEncoder(nn.Module):
         images_feature = self.image_encoder(images)
         responses_first = self.text_encoder(responses, rm)
 
-        if self.synthesis_method == 'matmul':
+        if self.joint_method == 'late':
             contexts = contexts_first.mm(self.M)
             contexts = contexts.view(-1, 1, self.hidden_size)
             images = images_feature.view(-1, 1, self.hidden_size)
@@ -95,7 +95,7 @@ class TextImageTransformerEncoder(nn.Module):
             score_1, score_2 = torch.bmm(contexts, responses), torch.bmm(images, responses)
             probs_1, probs_2 = torch.sigmoid(score_1), torch.sigmoid(score_2)
             prob = torch.bmm(probs_1, probs_2).view(-1, 1)
-        elif self.synthesis_method == 'concat':
+        elif self.joint_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_feature), dim=1))
             responses_images = self.fc(torch.cat((responses_first, images_feature), dim=1))
             contexts_images = contexts_images.mm(self.M)
@@ -107,12 +107,12 @@ class TextImageTransformerEncoder(nn.Module):
         return prob
 
 class TextImageBertEncoder(nn.Module):
-    def __init__(self, image_model, synthesis_method, config):
+    def __init__(self, image_model, joint_method, config):
         super(TextImageBertEncoder, self).__init__()
 
         self.hidden_size = config.hidden_size
-        self.synthesis_method = synthesis_method
-        if synthesis_method == 'concat':
+        self.joint_method = joint_method
+        if joint_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
         if image_model == 'vgg':
             from model.vgg import VggEncoder
@@ -135,7 +135,7 @@ class TextImageBertEncoder(nn.Module):
         images_feature = self.image_encoder(images)
         responses_first = self.text_encoder(responses, rm)
 
-        if self.synthesis_method == 'matmul':
+        if self.joint_method == 'late':
             contexts = contexts_first.mm(self.M)
             contexts = contexts.view(-1, 1, self.hidden_size)
             images = images_feature.view(-1, 1, self.hidden_size)
@@ -143,7 +143,7 @@ class TextImageBertEncoder(nn.Module):
             score_1, score_2 = torch.bmm(contexts, responses), torch.bmm(images, responses)
             probs_1, probs_2 = torch.sigmoid(score_1), torch.sigmoid(score_2)
             prob = torch.bmm(probs_1, probs_2).view(-1, 1)
-        elif self.synthesis_method == 'concat':
+        elif self.joint_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_feature), dim=1))
             responses_images = self.fc(torch.cat((responses_first, images_feature), dim=1))
             contexts_images = contexts_images.mm(self.M)

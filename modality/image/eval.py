@@ -39,7 +39,7 @@ def set_log():
         os.makedirs(save_dir)
     format = '%(message)s'
     filename = save_dir + '/' + text_model + '_' + image_model + '_' \
-               + synthesis_method + '_' + datetime.now().strftime('%Y%m%d%H%M') + '.log'
+               + joint_method + '_' + datetime.now().strftime('%Y%m%d%H%M') + '.log'
     logging.basicConfig(filename=filename, level=logging.DEBUG, format=format)
 
 def get_config(file_path):

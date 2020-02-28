@@ -15,7 +15,7 @@ Options:
     --task                response or action
     --text_model          lstm or transformer or bert
     --image_model         vgg or resnet or efficientnet
-    --synthesis_method    matmul or concat
+    --joint_method        late or concat
 ```
 
 ### Eval options
@@ -35,11 +35,11 @@ Options:
 ### Text and Image Modality
 
 1. `$ cd modality/text_image`
-2. `$ python train.py --task action --text_model transformer --image_model vgg --synthesis_method matmul`
+2. `$ python train.py --task action --text_model transformer --image_model vgg --joint_method late`
 3. `$ python eval.py --path <path> --log`
 
 ### Text, Image and Gaze Modality
 
 1. `$ cd modality/text_image_gaze`
-2. `$ python train.py --task action --text_model transformer --image_model vgg --synthesis_method matmul`
+2. `$ python train.py --task action --text_model transformer --image_model vgg --joint_method late`
 3. `$ python eval.py --path <path> --log`
