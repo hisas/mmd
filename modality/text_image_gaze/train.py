@@ -14,11 +14,11 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from helper.image_helper import *
-from mmd_dataset import MmdDataset
-
 current_dir = pathlib.Path(__file__).resolve().parent
 sys.path.append(str(current_dir) + '/../..')
+
+from helper.image_helper import *
+from mmd_dataset import MmdDataset
 
 SEED = 0
 random.seed(SEED)
@@ -183,7 +183,7 @@ elif text_model == 'transformer':
     from model.text_image_gaze_encoder import TextImageGazeTransformerEncoder
     encoder = TextImageGazeTransformerEncoder(image_model, joint_method, id_to_vec, emb_size, vocab_size, config, device)
 elif text_model == 'bert':
-    from model.text_image_encoder import TextImageGazeBertEncoder
+    from model.text_image_gaze_encoder import TextImageGazeBertEncoder
     encoder = TextImageGazeBertEncoder(image_model, joint_method, config)
 encoder.to(device)
 

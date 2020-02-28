@@ -14,10 +14,10 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import BertJapaneseTokenizer
 
-from helper.image_helper import *
-
 current_dir = pathlib.Path(__file__).resolve().parent
 sys.path.append(str(current_dir) + '/../..')
+
+from helper.image_helper import *
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -39,7 +39,7 @@ def set_log():
         os.makedirs(save_dir)
     format = '%(message)s'
     filename = save_dir + '/' + text_model + '_' + image_model + '_' \
-               + joint_method + '_' + datetime.now().strftime('%Y%m%d%H%M') + '.log'
+               + '_' + datetime.now().strftime('%Y%m%d%H%M') + '.log'
     logging.basicConfig(filename=filename, level=logging.DEBUG, format=format)
 
 def get_config(file_path):
@@ -94,9 +94,9 @@ def calc_test_accuracy():
                 p, l = prob.item(), label.item()
                 if ((p >= 0.5) and (l == 1.0)) or ((p < 0.5) and (l == 0.0)):
                     test_correct_count += 1
-                    logging.info('%s %s %s %s %s', 'o', h(contexts[i]), h(responses[i]), int(l), round(p, 2))
+                    logging.info('%s %s %s %s %s', 'o', images_path[i], h(responses[i]), int(l), round(p, 2))
                 else:
-                    logging.info('%s %s %s %s %s', 'x', h(contexts[i]), h(responses[i]), int(l), round(p, 2))
+                    logging.info('%s %s %s %s %s', 'x', images_path[i], h(responses[i]), int(l), round(p, 2))
 
     test_accuracy = test_correct_count / len(test_1)
 
@@ -145,7 +145,7 @@ def get_recall_at_k():
             else:
                 msg += 'x'
 
-            logging.info('%s %s %s', msg, h(contexts[0]), h(responses[0]))
+            logging.info('%s %s %s', msg, images_path[0], h(responses[0]))
             for r, p in zip(responses[sorted_idx], sorted_probs):
                 logging.info('%s %s %s', '\t', h(r[0]), p.item())
 

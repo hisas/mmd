@@ -17,6 +17,8 @@ from transformers import BertJapaneseTokenizer
 current_dir = pathlib.Path(__file__).resolve().parent
 sys.path.append(str(current_dir) + '/../..')
 
+from helper.image_helper import *
+
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 parser = argparse.ArgumentParser()

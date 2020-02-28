@@ -14,10 +14,10 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import BertJapaneseTokenizer
 
-from helper.image_helper import *
-
 current_dir = pathlib.Path(__file__).resolve().parent
 sys.path.append(str(current_dir) + '/../..')
+
+from helper.image_helper import *
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
