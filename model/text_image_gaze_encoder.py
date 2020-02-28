@@ -16,10 +16,10 @@ class TextImageGazeLstmEncoder(nn.Module):
             self.image_gaze_encoder = VggEncoder(self.hidden_size, gaze=True)
         elif image_model == 'resnet':
             from model.resnet import ResNetEncoder
-            self.image_encoder = ResNetEncoder(self.hidden_size)
+            self.image_gaze_encoder = ResNetEncoder(self.hidden_size)
         elif image_model == 'efficientnet':
             from model.efficientnet import EfficientNetEncoder
-            self.image_encoder = EfficientNetEncoder(self.hidden_size)
+            self.image_gaze_encoder = EfficientNetEncoder(self.hidden_size)
 
         from model.lstm import LstmEncoder
         self.text_encoder = LstmEncoder(id_to_vec, emb_size, vocab_size, config)
@@ -49,6 +49,14 @@ class TextImageGazeLstmEncoder(nn.Module):
         elif self.joint_method == 'concat':
             contexts_images = self.fc(torch.cat((sorted_c, images_gazes_feature), dim=1))
             responses_images = self.fc(torch.cat((sorted_r, images_gazes_feature), dim=1))
+        elif self.joint_method == 'sum':
+            contexts_images = sorted_c + images_gazes_feature
+            responses_images = sorted_r + images_gazes_feature
+        elif self.joint_method == 'product':
+            contexts_images = sorted_c * images_gazes_feature
+            responses_images = sorted_r * images_gazes_feature
+        
+        if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
             contexts_images = contexts_images.view(-1, 1, self.hidden_size)
             responses_images = responses_images.view(-1, self.hidden_size, 1)
@@ -71,10 +79,10 @@ class TextImageGazeTransformerEncoder(nn.Module):
             self.image_gaze_encoder = VggEncoder(self.hidden_size, gaze=True)
         elif image_model == 'resnet':
             from model.resnet import ResNetEncoder
-            self.image_encoder = ResNetEncoder(self.hidden_size)
+            self.image_gaze_encoder = ResNetEncoder(self.hidden_size)
         elif image_model == 'efficientnet':
             from model.efficientnet import EfficientNetEncoder
-            self.image_encoder = EfficientNetEncoder(self.hidden_size)
+            self.image_gaze_encoder = EfficientNetEncoder(self.hidden_size)
 
         from model.transformer import TransformerEncoder
         self.text_encoder = TransformerEncoder(id_to_vec, emb_size, vocab_size, config, device)
@@ -98,6 +106,14 @@ class TextImageGazeTransformerEncoder(nn.Module):
         elif self.joint_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_gazes_feature), dim=1))
             responses_images = self.fc(torch.cat((responses_first, images_gazes_feature), dim=1))
+        elif self.joint_method == 'sum':
+            contexts_images = contexts_first + images_gazes_feature
+            responses_images = responses_first + images_gazes_feature
+        elif self.joint_method == 'product':
+            contexts_images = contexts_first * images_gazes_feature
+            responses_images = responses_first * images_gazes_feature
+        
+        if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
             contexts_images = contexts_images.view(-1, 1, self.hidden_size)
             responses_images = responses_images.view(-1, self.hidden_size, 1)
@@ -119,10 +135,10 @@ class TextImageGazeBertEncoder(nn.Module):
             self.image_gaze_encoder = VggEncoder(self.hidden_size, gaze=True)
         elif image_model == 'resnet':
             from model.resnet import ResNetEncoder
-            self.image_encoder = ResNetEncoder(self.hidden_size)
+            self.image_gaze_encoder = ResNetEncoder(self.hidden_size)
         elif image_model == 'efficientnet':
             from model.efficientnet import EfficientNetEncoder
-            self.image_encoder = EfficientNetEncoder(self.hidden_size)
+            self.image_gaze_encoder = EfficientNetEncoder(self.hidden_size)
 
         from model.bert import BertEncoder
         self.text_encoder = BertEncoder(config)
@@ -146,6 +162,14 @@ class TextImageGazeBertEncoder(nn.Module):
         elif self.joint_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_gazes_feature), dim=1))
             responses_images = self.fc(torch.cat((responses_first, images_gazes_feature), dim=1))
+        elif self.joint_method == 'sum':
+            contexts_images = contexts_first + images_gazes_feature
+            responses_images = responses_first + images_gazes_feature
+        elif self.joint_method == 'product':
+            contexts_images = contexts_first * images_gazes_feature
+            responses_images = responses_first * images_gazes_feature
+        
+        if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
             contexts_images = contexts_images.view(-1, 1, self.hidden_size)
             responses_images = responses_images.view(-1, self.hidden_size, 1)

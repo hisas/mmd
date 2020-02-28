@@ -14,10 +14,10 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from mmd_dataset import MmdDataset
-
 current_dir = pathlib.Path(__file__).resolve().parent
 sys.path.append(str(current_dir) + '/../..')
+
+from mmd_dataset import MmdDataset
 
 SEED = 0
 random.seed(SEED)

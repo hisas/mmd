@@ -49,6 +49,14 @@ class TextImageLstmEncoder(nn.Module):
         elif self.joint_method == 'concat':
             contexts_images = self.fc(torch.cat((sorted_c, images_feature), dim=1))
             responses_images = self.fc(torch.cat((sorted_r, images_feature), dim=1))
+        elif self.joint_method == 'sum':
+            contexts_images = sorted_c + images_feature
+            responses_images = sorted_r + images_feature
+        elif self.joint_method == 'product':
+            contexts_images = sorted_c * images_feature
+            responses_images = sorted_r * images_feature
+
+        if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
             contexts_images = contexts_images.view(-1, 1, self.hidden_size)
             responses_images = responses_images.view(-1, self.hidden_size, 1)
@@ -98,6 +106,14 @@ class TextImageTransformerEncoder(nn.Module):
         elif self.joint_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_feature), dim=1))
             responses_images = self.fc(torch.cat((responses_first, images_feature), dim=1))
+        elif self.joint_method == 'sum':
+            contexts_images = contexts_first + images_feature
+            responses_images = responses_first + images_feature
+        elif self.joint_method == 'product':
+            contexts_images = contexts_first * images_feature
+            responses_images = responses_first * images_feature
+        
+        if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
             contexts_images = contexts_images.view(-1, 1, self.hidden_size)
             responses_images = responses_images.view(-1, self.hidden_size, 1)
@@ -146,6 +162,14 @@ class TextImageBertEncoder(nn.Module):
         elif self.joint_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_feature), dim=1))
             responses_images = self.fc(torch.cat((responses_first, images_feature), dim=1))
+        elif self.joint_method == 'sum':
+            contexts_images = contexts_first + images_feature
+            responses_images = responses_first + images_feature
+        elif self.joint_method == 'product':
+            contexts_images = contexts_first * images_feature
+            responses_images = responses_first * images_feature
+        
+        if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
             contexts_images = contexts_images.view(-1, 1, self.hidden_size)
             responses_images = responses_images.view(-1, self.hidden_size, 1)
@@ -153,3 +177,4 @@ class TextImageBertEncoder(nn.Module):
             prob = torch.sigmoid(score).view(-1, 1)
 
         return prob
+

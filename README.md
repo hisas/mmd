@@ -12,10 +12,10 @@
 ```
 Options:
 
-    --task                response or action
-    --text_model          lstm or transformer or bert
-    --image_model         vgg or resnet or efficientnet
-    --joint_method        late or concat
+    --task                response / action
+    --text_model          lstm / transformer / bert
+    --image_model         vgg / resnet / efficientnet
+    --joint_method        concat / sum / product / late
 ```
 
 ### Eval options
