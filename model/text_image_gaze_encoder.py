@@ -1,6 +1,14 @@
+import pathlib
+import sys
+
 import torch
 from torch import nn
 from torch.nn import init
+
+current_dir = pathlib.Path(__file__).resolve().parent
+sys.path.append(str(current_dir) + '/..')
+
+from helper.compact_bilinear_pooling import CompactBilinearPooling
 
 
 class TextImageGazeLstmEncoder(nn.Module):
@@ -11,6 +19,9 @@ class TextImageGazeLstmEncoder(nn.Module):
         self.joint_method = joint_method
         if joint_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
+        elif joint_method == 'mcb':
+            self.mcb = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+
         if image_model == 'vgg':
             from model.vgg import VggEncoder
             self.image_gaze_encoder = VggEncoder(self.hidden_size, gaze=True)
@@ -55,6 +66,9 @@ class TextImageGazeLstmEncoder(nn.Module):
         elif self.joint_method == 'product':
             contexts_images = sorted_c * images_gazes_feature
             responses_images = sorted_r * images_gazes_feature
+        elif self.joint_method == 'mcb':
+            contexts_images = self.mcb(sorted_c, images_gazes_feature)
+            responses_images = self.mcb(sorted_r, images_gazes_feature)
         
         if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
@@ -74,6 +88,9 @@ class TextImageGazeTransformerEncoder(nn.Module):
         self.joint_method = joint_method
         if joint_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
+        elif joint_method == 'mcb':
+            self.mcb = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+
         if image_model == 'vgg':
             from model.vgg import VggEncoder
             self.image_gaze_encoder = VggEncoder(self.hidden_size, gaze=True)
@@ -112,6 +129,9 @@ class TextImageGazeTransformerEncoder(nn.Module):
         elif self.joint_method == 'product':
             contexts_images = contexts_first * images_gazes_feature
             responses_images = responses_first * images_gazes_feature
+        elif self.joint_method == 'mcb':
+            contexts_images = self.mcb(contexts_first, images_gazes_feature)
+            responses_images = self.mcb(responses_first, images_gazes_feature)
         
         if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
@@ -130,6 +150,9 @@ class TextImageGazeBertEncoder(nn.Module):
         self.joint_method = joint_method
         if joint_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
+        elif joint_method == 'mcb':
+            self.mcb = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+
         if image_model == 'vgg':
             from model.vgg import VggEncoder
             self.image_gaze_encoder = VggEncoder(self.hidden_size, gaze=True)
@@ -168,6 +191,9 @@ class TextImageGazeBertEncoder(nn.Module):
         elif self.joint_method == 'product':
             contexts_images = contexts_first * images_gazes_feature
             responses_images = responses_first * images_gazes_feature
+        elif self.joint_method == 'mcb':
+            contexts_images = self.mcb(contexts_first, images_gazes_feature)
+            responses_images = self.mcb(responses_first, images_gazes_feature)
         
         if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
@@ -177,3 +203,4 @@ class TextImageGazeBertEncoder(nn.Module):
             prob = torch.sigmoid(score).view(-1, 1)
 
         return prob
+
