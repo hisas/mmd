@@ -9,6 +9,7 @@ current_dir = pathlib.Path(__file__).resolve().parent
 sys.path.append(str(current_dir) + '/..')
 
 from helper.compact_bilinear_pooling import CompactBilinearPooling
+from helper.fusion import MLBFusion, MutanFusion
 
 
 class TextImageLstmEncoder(nn.Module):
@@ -20,7 +21,12 @@ class TextImageLstmEncoder(nn.Module):
         if joint_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
         elif joint_method == 'mcb':
-            self.mcb = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+            self.fusion = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+        elif joint_method == 'mlb':
+            self.fusion = MLBFusion({'dim_h': self.hidden_size, 'dropout_v': 0.5, 'dropout_q': 0.5})
+        elif joint_method == 'mutan':
+            self.fusion = MutanFusion({'dim_hv': self.hidden_size, 'dim_hq': self.hidden_size, 'dim_mm': self.hidden_size, \
+                                       'R': 5, 'dropout_hv': 0, 'dropout_hq': 0}, visual_embedding=False, question_embedding=False)
 
         if image_model == 'vgg':
             from model.vgg import VggEncoder
@@ -66,9 +72,9 @@ class TextImageLstmEncoder(nn.Module):
         elif self.joint_method == 'product':
             contexts_images = sorted_c * images_feature
             responses_images = sorted_r * images_feature
-        elif self.joint_method == 'mcb':
-            contexts_images = self.mcb(sorted_c, images_feature)
-            responses_images = self.mcb(sorted_r, images_feature)
+        elif self.joint_method in ['mcb', 'mlb', 'mutan']:
+            contexts_images = self.fusion(sorted_c, images_feature)
+            responses_images = self.fusion(sorted_r, images_feature)
 
         if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
@@ -89,7 +95,12 @@ class TextImageTransformerEncoder(nn.Module):
         if joint_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
         elif joint_method == 'mcb':
-            self.mcb = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+            self.fusion = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+        elif joint_method == 'mlb':
+            self.fusion = MLBFusion({'dim_h': self.hidden_size, 'dropout_v': 0.5, 'dropout_q': 0.5})
+        elif joint_method == 'mutan':
+            self.fusion = MutanFusion({'dim_hv': self.hidden_size, 'dim_hq': self.hidden_size, 'dim_mm': self.hidden_size, \
+                                       'R': 5, 'dropout_hv': 0, 'dropout_hq': 0}, visual_embedding=False, question_embedding=False)
 
         if image_model == 'vgg':
             from model.vgg import VggEncoder
@@ -129,9 +140,9 @@ class TextImageTransformerEncoder(nn.Module):
         elif self.joint_method == 'product':
             contexts_images = contexts_first * images_feature
             responses_images = responses_first * images_feature
-        elif self.joint_method == 'mcb':
-            contexts_images = self.mcb(contexts_first, images_feature)
-            responses_images = self.mcb(responses_first, images_feature)
+        elif self.joint_method in ['mcb', 'mlb', 'mutan']:
+            contexts_images = self.fusion(contexts_first, images_feature)
+            responses_images = self.fusion(responses_first, images_feature)
         
         if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
@@ -151,7 +162,12 @@ class TextImageBertEncoder(nn.Module):
         if joint_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
         elif joint_method == 'mcb':
-            self.mcb = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+            self.fusion = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+        elif joint_method == 'mlb':
+            self.fusion = MLBFusion({'dim_h': self.hidden_size, 'dropout_v': 0.5, 'dropout_q': 0.5})
+        elif joint_method == 'mutan':
+            self.fusion = MutanFusion({'dim_hv': self.hidden_size, 'dim_hq': self.hidden_size, 'dim_mm': self.hidden_size, \
+                                       'R': 5, 'dropout_hv': 0, 'dropout_hq': 0}, visual_embedding=False, question_embedding=False)
 
         if image_model == 'vgg':
             from model.vgg import VggEncoder
@@ -191,9 +207,9 @@ class TextImageBertEncoder(nn.Module):
         elif self.joint_method == 'product':
             contexts_images = contexts_first * images_feature
             responses_images = responses_first * images_feature
-        elif self.joint_method == 'mcb':
-            contexts_images = self.mcb(contexts_first, images_feature)
-            responses_images = self.mcb(responses_first, images_feature)
+        elif self.joint_method in ['mcb', 'mlb', 'mutan']:
+            contexts_images = self.fusion(contexts_first, images_feature)
+            responses_images = self.fusion(responses_first, images_feature)
         
         if self.joint_method != 'late':
             contexts_images = contexts_images.mm(self.M)
