@@ -4,12 +4,7 @@ import sys
 import torch
 from torch import nn
 from torch.nn import init
-
-current_dir = pathlib.Path(__file__).resolve().parent
-sys.path.append(str(current_dir) + '/..')
-
-from helper.compact_bilinear_pooling import CompactBilinearPooling
-from helper.fusion import MLBFusion, MutanFusion
+from block import fusions
 
 
 class TextImageGazeLstmEncoder(nn.Module):
@@ -21,12 +16,13 @@ class TextImageGazeLstmEncoder(nn.Module):
         if fusion_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
         elif fusion_method == 'mcb':
-            self.fusion = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+            self.fusion = fusions.MCB([self.hidden_size, self.hidden_size], self.hidden_size)
         elif fusion_method == 'mlb':
-            self.fusion = MLBFusion({'dim_h': self.hidden_size, 'dropout_v': 0.5, 'dropout_q': 0.5})
+            self.fusion = fusions.MLB([self.hidden_size, self.hidden_size], self.hidden_size)
         elif fusion_method == 'mutan':
-            self.fusion = MutanFusion({'dim_hv': self.hidden_size, 'dim_hq': self.hidden_size, 'dim_mm': self.hidden_size, \
-                                       'R': 5, 'dropout_hv': 0, 'dropout_hq': 0}, visual_embedding=False, question_embedding=False)
+            self.fusion = fusions.Mutan([self.hidden_size, self.hidden_size], self.hidden_size)
+        elif fusion_method == 'block':
+            self.fusion = fusions.Block([self.hidden_size, self.hidden_size], self.hidden_size)
 
         if image_model == 'vgg':
             from model.vgg import VggEncoder
@@ -72,9 +68,9 @@ class TextImageGazeLstmEncoder(nn.Module):
         elif self.fusion_method == 'product':
             contexts_images = sorted_c * images_gazes_feature
             responses_images = sorted_r * images_gazes_feature
-        elif self.fusion_method in ['mcb', 'mlb', 'mutan']:
-            contexts_images = self.fusion(sorted_c, images_gazes_feature)
-            responses_images = self.fusion(sorted_r, images_gazes_feature)
+        elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
+            contexts_images = self.fusion([sorted_c, images_gazes_feature])
+            responses_images = self.fusion([sorted_r, images_gazes_feature])
         
         if self.fusion_method != 'late':
             contexts_images = contexts_images.mm(self.M)
@@ -95,12 +91,13 @@ class TextImageGazeTransformerEncoder(nn.Module):
         if fusion_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
         elif fusion_method == 'mcb':
-            self.fusion = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+            self.fusion = fusions.MCB([self.hidden_size, self.hidden_size], self.hidden_size)
         elif fusion_method == 'mlb':
-            self.fusion = MLBFusion({'dim_h': self.hidden_size, 'dropout_v': 0.5, 'dropout_q': 0.5})
+            self.fusion = fusions.MLB([self.hidden_size, self.hidden_size], self.hidden_size)
         elif fusion_method == 'mutan':
-            self.fusion = MutanFusion({'dim_hv': self.hidden_size, 'dim_hq': self.hidden_size, 'dim_mm': self.hidden_size, \
-                                       'R': 5, 'dropout_hv': 0, 'dropout_hq': 0}, visual_embedding=False, question_embedding=False)
+            self.fusion = fusions.Mutan([self.hidden_size, self.hidden_size], self.hidden_size)
+        elif fusion_method == 'block':
+            self.fusion = fusions.Block([self.hidden_size, self.hidden_size], self.hidden_size)
 
         if image_model == 'vgg':
             from model.vgg import VggEncoder
@@ -140,9 +137,9 @@ class TextImageGazeTransformerEncoder(nn.Module):
         elif self.fusion_method == 'product':
             contexts_images = contexts_first * images_gazes_feature
             responses_images = responses_first * images_gazes_feature
-        elif self.fusion_method in ['mcb', 'mlb', 'mutan']:
-            contexts_images = self.fusion(contexts_first, images_gazes_feature)
-            responses_images = self.fusion(responses_first, images_gazes_feature)
+        elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
+            contexts_images = self.fusion([contexts_first, images_gazes_feature])
+            responses_images = self.fusion([responses_first, images_gazes_feature])
         
         if self.fusion_method != 'late':
             contexts_images = contexts_images.mm(self.M)
@@ -162,12 +159,13 @@ class TextImageGazeBertEncoder(nn.Module):
         if fusion_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
         elif fusion_method == 'mcb':
-            self.fusion = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
+            self.fusion = fusions.MCB([self.hidden_size, self.hidden_size], self.hidden_size)
         elif fusion_method == 'mlb':
-            self.fusion = MLBFusion({'dim_h': self.hidden_size, 'dropout_v': 0.5, 'dropout_q': 0.5})
+            self.fusion = fusions.MLB([self.hidden_size, self.hidden_size], self.hidden_size)
         elif fusion_method == 'mutan':
-            self.fusion = MutanFusion({'dim_hv': self.hidden_size, 'dim_hq': self.hidden_size, 'dim_mm': self.hidden_size, \
-                                       'R': 5, 'dropout_hv': 0, 'dropout_hq': 0}, visual_embedding=False, question_embedding=False)
+            self.fusion = fusions.Mutan([self.hidden_size, self.hidden_size], self.hidden_size)
+        elif fusion_method == 'block':
+            self.fusion = fusions.Block([self.hidden_size, self.hidden_size], self.hidden_size)
 
         if image_model == 'vgg':
             from model.vgg import VggEncoder
@@ -207,9 +205,9 @@ class TextImageGazeBertEncoder(nn.Module):
         elif self.fusion_method == 'product':
             contexts_images = contexts_first * images_gazes_feature
             responses_images = responses_first * images_gazes_feature
-        elif self.fusion_method in ['mcb', 'mlb', 'mutan']:
-            contexts_images = self.fusion(contexts_first, images_gazes_feature)
-            responses_images = self.fusion(responses_first, images_gazes_feature)
+        elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
+            contexts_images = self.fusion([contexts_first, images_gazes_feature])
+            responses_images = self.fusion([responses_first, images_gazes_feature])
         
         if self.fusion_method != 'late':
             contexts_images = contexts_images.mm(self.M)

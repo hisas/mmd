@@ -15,7 +15,7 @@ Options:
     --task                response / action
     --text_model          lstm / transformer / bert
     --image_model         vgg / resnet / efficientnet
-    --fusion_method        concat / sum / product / mcb / mlb / mutan / late
+    --fusion_method        concat / sum / product / mcb / mlb / mutan / block / late
 ```
 
 ### Eval options
