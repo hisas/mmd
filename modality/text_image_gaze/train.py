@@ -32,12 +32,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--task')
 parser.add_argument('--text_model')
 parser.add_argument('--image_model')
-parser.add_argument('--joint_method')
+parser.add_argument('--fusion_method')
 args = parser.parse_args()
 task = args.task
 text_model = args.text_model
 image_model = args.image_model
-joint_method = args.joint_method
+fusion_method = args.fusion_method
 
 
 def get_config(file_path):
@@ -147,7 +147,7 @@ def train_model(learning_rate, l2_penalty, epochs):
                 save_dir = 'models/' + task
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
-                save_path = save_dir + '/' + text_model + '_' + image_model + '_' + joint_method + '_' \
+                save_path = save_dir + '/' + text_model + '_' + image_model + '_' + fusion_method + '_' \
                             + datetime.now().strftime('%Y%m%d%H%M') + '_' + str(val_accuracy)[:5] + '.pt'
                 torch.save(encoder.state_dict(), save_path)
                 print("New best found and saved.")
@@ -178,13 +178,13 @@ if text_model != 'bert':
 config = get_config('config/' + text_model + '_config.json')
 if text_model == 'lstm':
     from model.text_image_gaze_encoder import TextImageGazeLstmEncoder
-    encoder = TextImageGazeLstmEncoder(image_model, joint_method, id_to_vec, emb_size, vocab_size, config)
+    encoder = TextImageGazeLstmEncoder(image_model, fusion_method, id_to_vec, emb_size, vocab_size, config)
 elif text_model == 'transformer':
     from model.text_image_gaze_encoder import TextImageGazeTransformerEncoder
-    encoder = TextImageGazeTransformerEncoder(image_model, joint_method, id_to_vec, emb_size, vocab_size, config, device)
+    encoder = TextImageGazeTransformerEncoder(image_model, fusion_method, id_to_vec, emb_size, vocab_size, config, device)
 elif text_model == 'bert':
     from model.text_image_gaze_encoder import TextImageGazeBertEncoder
-    encoder = TextImageGazeBertEncoder(image_model, joint_method, config)
+    encoder = TextImageGazeBertEncoder(image_model, fusion_method, config)
 encoder.to(device)
 
 train_model(learning_rate=0.0001, l2_penalty=0.0001, epochs=50)

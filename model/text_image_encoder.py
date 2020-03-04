@@ -13,18 +13,18 @@ from helper.fusion import MLBFusion, MutanFusion
 
 
 class TextImageLstmEncoder(nn.Module):
-    def __init__(self, image_model, joint_method, id_to_vec, emb_size, vocab_size, config):
+    def __init__(self, image_model, fusion_method, id_to_vec, emb_size, vocab_size, config):
         super(TextImageLstmEncoder, self).__init__()
 
         self.hidden_size = config.hidden_size
-        self.joint_method = joint_method
-        if joint_method == 'concat':
+        self.fusion_method = fusion_method
+        if fusion_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
-        elif joint_method == 'mcb':
+        elif fusion_method == 'mcb':
             self.fusion = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
-        elif joint_method == 'mlb':
+        elif fusion_method == 'mlb':
             self.fusion = MLBFusion({'dim_h': self.hidden_size, 'dropout_v': 0.5, 'dropout_q': 0.5})
-        elif joint_method == 'mutan':
+        elif fusion_method == 'mutan':
             self.fusion = MutanFusion({'dim_hv': self.hidden_size, 'dim_hq': self.hidden_size, 'dim_mm': self.hidden_size, \
                                        'R': 5, 'dropout_hv': 0, 'dropout_hq': 0}, visual_embedding=False, question_embedding=False)
 
@@ -55,7 +55,7 @@ class TextImageLstmEncoder(nn.Module):
         for i, v in enumerate(rsi):
             sorted_r[v] = responses_last_hidden[i]
 
-        if self.joint_method == 'late':
+        if self.fusion_method == 'late':
             contexts = sorted_c.mm(self.M)
             contexts = contexts.view(-1, 1, self.hidden_size)
             images = images_feature.view(-1, 1, self.hidden_size)
@@ -63,20 +63,20 @@ class TextImageLstmEncoder(nn.Module):
             score_1, score_2 = torch.bmm(contexts, responses), torch.bmm(images, responses)
             probs_1, probs_2 = torch.sigmoid(score_1), torch.sigmoid(score_2)
             prob = torch.bmm(probs_1, probs_2).view(-1, 1)
-        elif self.joint_method == 'concat':
+        elif self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((sorted_c, images_feature), dim=1))
             responses_images = self.fc(torch.cat((sorted_r, images_feature), dim=1))
-        elif self.joint_method == 'sum':
+        elif self.fusion_method == 'sum':
             contexts_images = sorted_c + images_feature
             responses_images = sorted_r + images_feature
-        elif self.joint_method == 'product':
+        elif self.fusion_method == 'product':
             contexts_images = sorted_c * images_feature
             responses_images = sorted_r * images_feature
-        elif self.joint_method in ['mcb', 'mlb', 'mutan']:
+        elif self.fusion_method in ['mcb', 'mlb', 'mutan']:
             contexts_images = self.fusion(sorted_c, images_feature)
             responses_images = self.fusion(sorted_r, images_feature)
 
-        if self.joint_method != 'late':
+        if self.fusion_method != 'late':
             contexts_images = contexts_images.mm(self.M)
             contexts_images = contexts_images.view(-1, 1, self.hidden_size)
             responses_images = responses_images.view(-1, self.hidden_size, 1)
@@ -87,18 +87,18 @@ class TextImageLstmEncoder(nn.Module):
 
 
 class TextImageTransformerEncoder(nn.Module):
-    def __init__(self, image_model, joint_method, id_to_vec, emb_size, vocab_size, config, device='cuda:0'):
+    def __init__(self, image_model, fusion_method, id_to_vec, emb_size, vocab_size, config, device='cuda:0'):
         super(TextImageTransformerEncoder, self).__init__()
 
         self.hidden_size = config.hidden_size
-        self.joint_method = joint_method
-        if joint_method == 'concat':
+        self.fusion_method = fusion_method
+        if fusion_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
-        elif joint_method == 'mcb':
+        elif fusion_method == 'mcb':
             self.fusion = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
-        elif joint_method == 'mlb':
+        elif fusion_method == 'mlb':
             self.fusion = MLBFusion({'dim_h': self.hidden_size, 'dropout_v': 0.5, 'dropout_q': 0.5})
-        elif joint_method == 'mutan':
+        elif fusion_method == 'mutan':
             self.fusion = MutanFusion({'dim_hv': self.hidden_size, 'dim_hq': self.hidden_size, 'dim_mm': self.hidden_size, \
                                        'R': 5, 'dropout_hv': 0, 'dropout_hq': 0}, visual_embedding=False, question_embedding=False)
 
@@ -123,7 +123,7 @@ class TextImageTransformerEncoder(nn.Module):
         images_feature = self.image_encoder(images)
         responses_first = self.text_encoder(responses, rm)
 
-        if self.joint_method == 'late':
+        if self.fusion_method == 'late':
             contexts = contexts_first.mm(self.M)
             contexts = contexts.view(-1, 1, self.hidden_size)
             images = images_feature.view(-1, 1, self.hidden_size)
@@ -131,20 +131,20 @@ class TextImageTransformerEncoder(nn.Module):
             score_1, score_2 = torch.bmm(contexts, responses), torch.bmm(images, responses)
             probs_1, probs_2 = torch.sigmoid(score_1), torch.sigmoid(score_2)
             prob = torch.bmm(probs_1, probs_2).view(-1, 1)
-        elif self.joint_method == 'concat':
+        elif self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_feature), dim=1))
             responses_images = self.fc(torch.cat((responses_first, images_feature), dim=1))
-        elif self.joint_method == 'sum':
+        elif self.fusion_method == 'sum':
             contexts_images = contexts_first + images_feature
             responses_images = responses_first + images_feature
-        elif self.joint_method == 'product':
+        elif self.fusion_method == 'product':
             contexts_images = contexts_first * images_feature
             responses_images = responses_first * images_feature
-        elif self.joint_method in ['mcb', 'mlb', 'mutan']:
+        elif self.fusion_method in ['mcb', 'mlb', 'mutan']:
             contexts_images = self.fusion(contexts_first, images_feature)
             responses_images = self.fusion(responses_first, images_feature)
         
-        if self.joint_method != 'late':
+        if self.fusion_method != 'late':
             contexts_images = contexts_images.mm(self.M)
             contexts_images = contexts_images.view(-1, 1, self.hidden_size)
             responses_images = responses_images.view(-1, self.hidden_size, 1)
@@ -154,18 +154,18 @@ class TextImageTransformerEncoder(nn.Module):
         return prob
 
 class TextImageBertEncoder(nn.Module):
-    def __init__(self, image_model, joint_method, config):
+    def __init__(self, image_model, fusion_method, config):
         super(TextImageBertEncoder, self).__init__()
 
         self.hidden_size = config.hidden_size
-        self.joint_method = joint_method
-        if joint_method == 'concat':
+        self.fusion_method = fusion_method
+        if fusion_method == 'concat':
             self.fc = nn.Linear(self.hidden_size*2, self.hidden_size)
-        elif joint_method == 'mcb':
+        elif fusion_method == 'mcb':
             self.fusion = CompactBilinearPooling(self.hidden_size, self.hidden_size, self.hidden_size)
-        elif joint_method == 'mlb':
+        elif fusion_method == 'mlb':
             self.fusion = MLBFusion({'dim_h': self.hidden_size, 'dropout_v': 0.5, 'dropout_q': 0.5})
-        elif joint_method == 'mutan':
+        elif fusion_method == 'mutan':
             self.fusion = MutanFusion({'dim_hv': self.hidden_size, 'dim_hq': self.hidden_size, 'dim_mm': self.hidden_size, \
                                        'R': 5, 'dropout_hv': 0, 'dropout_hq': 0}, visual_embedding=False, question_embedding=False)
 
@@ -190,7 +190,7 @@ class TextImageBertEncoder(nn.Module):
         images_feature = self.image_encoder(images)
         responses_first = self.text_encoder(responses, rm)
 
-        if self.joint_method == 'late':
+        if self.fusion_method == 'late':
             contexts = contexts_first.mm(self.M)
             contexts = contexts.view(-1, 1, self.hidden_size)
             images = images_feature.view(-1, 1, self.hidden_size)
@@ -198,20 +198,20 @@ class TextImageBertEncoder(nn.Module):
             score_1, score_2 = torch.bmm(contexts, responses), torch.bmm(images, responses)
             probs_1, probs_2 = torch.sigmoid(score_1), torch.sigmoid(score_2)
             prob = torch.bmm(probs_1, probs_2).view(-1, 1)
-        elif self.joint_method == 'concat':
+        elif self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_feature), dim=1))
             responses_images = self.fc(torch.cat((responses_first, images_feature), dim=1))
-        elif self.joint_method == 'sum':
+        elif self.fusion_method == 'sum':
             contexts_images = contexts_first + images_feature
             responses_images = responses_first + images_feature
-        elif self.joint_method == 'product':
+        elif self.fusion_method == 'product':
             contexts_images = contexts_first * images_feature
             responses_images = responses_first * images_feature
-        elif self.joint_method in ['mcb', 'mlb', 'mutan']:
+        elif self.fusion_method in ['mcb', 'mlb', 'mutan']:
             contexts_images = self.fusion(contexts_first, images_feature)
             responses_images = self.fusion(responses_first, images_feature)
         
-        if self.joint_method != 'late':
+        if self.fusion_method != 'late':
             contexts_images = contexts_images.mm(self.M)
             contexts_images = contexts_images.view(-1, 1, self.hidden_size)
             responses_images = responses_images.view(-1, self.hidden_size, 1)
