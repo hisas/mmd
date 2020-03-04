@@ -1,4 +1,5 @@
 attrdict
+block.bootstrap.pytorch
 efficientnet_pytorch
 gensim
 numpy
