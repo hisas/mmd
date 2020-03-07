@@ -14,7 +14,7 @@ class ResNetEncoder(nn.Module):
         model.fc = nn.Linear(model.fc.in_features, embed_size)
         self.model = model
         if gaze:
-            self.fc = nn.Linear(embed_size + 2, embed_size)
+            self.fc = nn.Linear(embed_size + 4, embed_size)
 
     def forward(self, image, gaze=None):
         image_feature = self.model(image)
