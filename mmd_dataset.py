@@ -74,7 +74,7 @@ def load_ids_and_labels(row, word_to_id, max_len, task):
     context = torch.tensor(context_ids, dtype=torch.long)
 
     image_path = row['Image']
-    gaze = torch.tensor([row['GazeX'], row['GazeY']])
+    gaze = torch.tensor([row['EyeX'], row['EyeY'], row['GazeX'], row['GazeY']])
 
     response_ids = []
     sentence = row['Action'] if task == 'action' else row['Response']
@@ -105,7 +105,7 @@ def test_load_ids(i, row, word_to_id, max_len):
     context = torch.tensor(context_ids, dtype=torch.long)
 
     image_path = row['Image']
-    gaze = torch.tensor([row['GazeX'], row['GazeY']])
+    gaze = torch.tensor([row['EyeX'], row['EyeY'], row['GazeX'], row['GazeY']])
 
     response_ids = []
     for word in sentence2words(row[i]):
@@ -133,7 +133,7 @@ class MmdDataset(Dataset):
         self.crl = []
         for _, row in df.iterrows():
             if 'test_10.csv' in path:
-                for i in range(4, 14):
+                for i in range(6, 16):
                     self.crl.append(test_load_ids(i, row, word_to_id, max_len))
             else:
                 self.crl.append(load_ids_and_labels(row, word_to_id, max_len, task))

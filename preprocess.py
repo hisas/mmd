@@ -16,11 +16,11 @@ def extract_gaze(df):
     df_ann = pd.read_csv('data/data_new/train_annotations.txt', delimiter=',', header=None)
     gaze = {}
     for _, r in df_ann.iterrows():
-        gaze[r[1]] = [r[8], r[9]]
+        gaze[r[1]] = [r[6], r[7], r[8], r[9]]
 
     data = []
     for _, r in df.iterrows():
-        data.append([r[0], r[1], gaze[r[2]][0], gaze[r[2]][1], r[3]])
+        data.append([r[0], r[1], gaze[r[2]][0], gaze[r[2]][1], gaze[r[2]][2], gaze[r[2]][3], r[3]])
 
     return pd.DataFrame(data)
 
@@ -66,16 +66,16 @@ def filter_response_df(path):
 def export_response_df(df, set):
     context_response = []
     for _, r in df.iterrows():
-        context_response.append([r[0], r[4]])
+        context_response.append([r[0], r[6]])
 
-    data = [['Context', 'Image', 'GazeX', 'GazeY', 'Response', 'Label']]
+    data = [['Context', 'Image', 'EyeX', 'EyeY', 'GazeX', 'GazeY', 'Response', 'Label']]
     for _, r in df.iterrows():
-        data.append([r[0], r[1], r[2], r[3], r[4], 1])
+        data.append([r[0], r[1], r[2], r[3], r[4], r[5], r[6], 1])
 
         while True:
             t = random.choice(context_response)
             if t[0] != r[0]:
-                data.append([r[0], r[1], r[2], r[3], t[1], 0])
+                data.append([r[0], r[1], r[2], r[3], r[4], r[5], t[1], 0])
                 break
 
     pd.DataFrame(data).to_csv('data/response_' + set + '.csv', index=False, header=False)
@@ -83,21 +83,21 @@ def export_response_df(df, set):
 def export_response_test_df(df):
     context_response = []
     for _, r in df.iterrows():
-        context_response.append([r[0], r[4]])
+        context_response.append([r[0], r[6]])
 
-    data = [['Context', 'Image', 'GazeX', 'GazeY', 'Response', 'Label']]
+    data = [['Context', 'Image', 'EyeX', 'EyeY', 'GazeX', 'GazeY', 'Response', 'Label']]
     for _, r in df.iterrows():
-        data.append([r[0], r[1], r[2], r[3], r[4], 1])
+        data.append([r[0], r[1], r[2], r[3], r[4], r[5], r[6], 1])
 
         while True:
             t = random.choice(context_response)
             if t[0] != r[0]:
-                data.append([r[0], r[1], r[2], r[3], t[1], 0])
+                data.append([r[0], r[1], r[2], r[3], r[4], r[5], t[1], 0])
                 break
 
     pd.DataFrame(data).to_csv('data/response_test_1.csv', index=False, header=False)
 
-    data = [['Context', 'Image', 'GazeX', 'GazeY', 'Ground Truth Response', 'Distractor_0', 'Distractor_1', \
+    data = [['Context', 'Image', 'EyeX', 'EyeY', 'GazeX', 'GazeY', 'Ground Truth Response', 'Distractor_0', 'Distractor_1', \
              'Distractor_2', 'Distractor_3', 'Distractor_4', 'Distractor_5', 'Distractor_6', 'Distractor_7', 'Distractor_8']]
 
     for _, r in df.iterrows():
@@ -112,7 +112,7 @@ def export_response_test_df(df):
                     flag = False
 
             if flag == True:
-                data.append(sum([[r[0]], [r[1]], [r[2]], [r[3]], [r[4]], ds], []))
+                data.append(sum([[r[0]], [r[1]], [r[2]], [r[3]], [r[4]], [r[5]], [r[6]], ds], []))
                 break
     pd.DataFrame(data).to_csv('data/response_test_10.csv', index=False, header=False)
 
@@ -132,16 +132,16 @@ def filter_action_df(path):
 def export_action_df(df, set):
     context_action = []
     for _, r in df.iterrows():
-        context_action.append([r[0], r[4]])
+        context_action.append([r[0], r[6]])
 
-    data = [['Context', 'Image', 'GazeX', 'GazeY', 'Action', 'Label']]
+    data = [['Context', 'Image', 'EyeX', 'EyeY', 'GazeX', 'GazeY', 'Action', 'Label']]
     for _, r in df.iterrows():
-        data.append([r[0], r[1], r[2], r[3], r[4], 1])
+        data.append([r[0], r[1], r[2], r[3], r[4], r[5], r[6], 1])
 
         while True:
             t = random.choice(context_action)
             if t[0] != r[0]:
-                data.append([r[0], r[1], r[2], r[3], t[1], 0])
+                data.append([r[0], r[1], r[2], r[3], r[4], r[5], t[1], 0])
                 break
 
     pd.DataFrame(data).to_csv('data/action_' + set + '.csv', index=False, header=False)
@@ -149,21 +149,21 @@ def export_action_df(df, set):
 def export_action_test_df(df):
     context_action = []
     for _, r in df.iterrows():
-        context_action.append([r[0], r[4]])
+        context_action.append([r[0], r[6]])
 
-    data = [['Context', 'Image', 'GazeX', 'GazeY', 'Action', 'Label']]
+    data = [['Context', 'Image', 'EyeX', 'EyeY', 'GazeX', 'GazeY', 'Action', 'Label']]
     for _, r in df.iterrows():
-        data.append([r[0], r[1], r[2], r[3], r[4], 1])
+        data.append([r[0], r[1], r[2], r[3], r[4], r[5], r[6], 1])
 
         while True:
             t = random.choice(context_action)
             if t[0] != r[0]:
-                data.append([r[0], r[1], r[2], r[3], t[1], 0])
+                data.append([r[0], r[1], r[2], r[3], r[4], r[5], t[1], 0])
                 break
 
     pd.DataFrame(data).to_csv('data/action_test_1.csv', index=False, header=False)
 
-    data = [['Context', 'Image', 'GazeX', 'GazeY', 'Ground Truth Action', 'Distractor_0', 'Distractor_1', \
+    data = [['Context', 'Image', 'EyeX', 'EyeY', 'GazeX', 'GazeY', 'Ground Truth Action', 'Distractor_0', 'Distractor_1', \
              'Distractor_2', 'Distractor_3', 'Distractor_4', 'Distractor_5', 'Distractor_6', 'Distractor_7', 'Distractor_8']]
 
     for _, r in df.iterrows():
@@ -178,7 +178,7 @@ def export_action_test_df(df):
                     flag = False
 
             if flag == True:
-                data.append(sum([[r[0]], [r[1]], [r[2]], [r[3]], [r[4]], ds], []))
+                data.append(sum([[r[0]], [r[1]], [r[2]], [r[3]], [r[4]], [r[5]], [r[6]], ds], []))
                 break
     pd.DataFrame(data).to_csv('data/action_test_10.csv', index=False, header=False)
 

@@ -21,7 +21,7 @@ def load_ids_and_labels(row, task):
     context, context_len = convert_sentence_to_ids(row['Context'])
 
     image_path = row['Image']
-    gaze = torch.tensor([row['GazeX'], row['GazeY']])
+    gaze = torch.tensor([row['EyeX'], row['EyeY'], row['GazeX'], row['GazeY']])
 
     response = row['Action'] if task == 'action' else row['Response']
     response, response_len = convert_sentence_to_ids(response)
@@ -34,7 +34,7 @@ def test_load_ids(i, row):
     context, context_len = convert_sentence_to_ids(row['Context'])
 
     image_path = row['Image']
-    gaze = torch.tensor([row['GazeX'], row['GazeY']])
+    gaze = torch.tensor([row['EyeX'], row['EyeY'], row['GazeX'], row['GazeY']])
 
     response, response_len = convert_sentence_to_ids(row[i])
 
@@ -45,7 +45,7 @@ class MmdBertDataset(Dataset):
         self.crl = []
         for _, row in pd.read_csv(path).iterrows():
             if 'test_10.csv' in path:
-                for i in range(4, 14):
+                for i in range(6, 16):
                     self.crl.append(test_load_ids(i, row))
             else:
                 self.crl.append(load_ids_and_labels(row, task))
