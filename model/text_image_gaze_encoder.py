@@ -30,20 +30,18 @@ class TextImageGazeLstmEncoder(nn.Module):
         elif image_model == 'resnet':
             from model.resnet import ResNetEncoder
             self.image_gaze_encoder = ResNetEncoder(self.hidden_size)
-        elif image_model == 'efficientnet':
-            from model.efficientnet import EfficientNetEncoder
-            self.image_gaze_encoder = EfficientNetEncoder(self.hidden_size)
 
         from model.lstm import LstmEncoder
-        self.text_encoder = LstmEncoder(id_to_vec, emb_size, vocab_size, config)
+        self.context_encoder = LstmEncoder(id_to_vec, emb_size, vocab_size, config)
+        self.response_encoder = LstmEncoder(id_to_vec, emb_size, vocab_size, config)
         M = torch.FloatTensor(self.hidden_size, self.hidden_size)
         init.xavier_normal_(M)
         self.M = nn.Parameter(M, requires_grad=True)
 
     def forward(self, contexts, contexts_len, csi, images, gazes, responses, responses_len, rsi):
-        contexts_last_hidden = self.text_encoder(contexts, contexts_len)
+        contexts_last_hidden = self.context_encoder(contexts, contexts_len)
         images_gazes_feature = self.image_gaze_encoder(images, gazes)
-        responses_last_hidden = self.text_encoder(responses, responses_len)
+        responses_last_hidden = self.response_encoder(responses, responses_len)
         sorted_c = torch.Tensor(len(contexts), self.hidden_size).to(contexts.device)
         sorted_r = torch.Tensor(len(responses), self.hidden_size).to(responses.device)
         for i, v in enumerate(csi):
@@ -51,15 +49,7 @@ class TextImageGazeLstmEncoder(nn.Module):
         for i, v in enumerate(rsi):
             sorted_r[v] = responses_last_hidden[i]
 
-        if self.fusion_method == 'late':
-            contexts = sorted_c.mm(self.M)
-            contexts = contexts.view(-1, 1, self.hidden_size)
-            images_gazes = images_gazes_feature.view(-1, 1, self.hidden_size)
-            responses = sorted_r.view(-1, self.hidden_size, 1)
-            score_1, score_2 = torch.bmm(contexts, responses), torch.bmm(images_gazes, responses)
-            probs_1, probs_2 = torch.sigmoid(score_1), torch.sigmoid(score_2)
-            prob = torch.bmm(probs_1, probs_2).view(-1, 1)
-        elif self.fusion_method == 'concat':
+        if self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((sorted_c, images_gazes_feature), dim=1))
             responses_images = self.fc(torch.cat((sorted_r, images_gazes_feature), dim=1))
         elif self.fusion_method == 'sum':
@@ -70,14 +60,12 @@ class TextImageGazeLstmEncoder(nn.Module):
             responses_images = sorted_r * images_gazes_feature
         elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
             contexts_images = self.fusion([sorted_c, images_gazes_feature])
-            responses_images = self.fusion([sorted_r, images_gazes_feature])
-        
-        if self.fusion_method != 'late':
-            contexts_images = contexts_images.mm(self.M)
-            contexts_images = contexts_images.view(-1, 1, self.hidden_size)
-            responses_images = responses_images.view(-1, self.hidden_size, 1)
-            score = torch.bmm(contexts_images, responses_images)
-            prob = torch.sigmoid(score).view(-1, 1)
+
+        contexts_images = contexts_images.mm(self.M)
+        contexts_images = contexts_images.view(-1, 1, self.hidden_size)
+        responses = sorted_r.view(-1, self.hidden_size, 1)
+        score = torch.bmm(contexts_images, responses)
+        prob = torch.sigmoid(score).view(-1, 1)
         
         return prob
 
@@ -105,30 +93,20 @@ class TextImageGazeTransformerEncoder(nn.Module):
         elif image_model == 'resnet':
             from model.resnet import ResNetEncoder
             self.image_gaze_encoder = ResNetEncoder(self.hidden_size)
-        elif image_model == 'efficientnet':
-            from model.efficientnet import EfficientNetEncoder
-            self.image_gaze_encoder = EfficientNetEncoder(self.hidden_size)
 
         from model.transformer import TransformerEncoder
-        self.text_encoder = TransformerEncoder(id_to_vec, emb_size, vocab_size, config, device)
+        self.context_encoder = TransformerEncoder(id_to_vec, emb_size, vocab_size, config, device)
+        self.response_encoder = TransformerEncoder(id_to_vec, emb_size, vocab_size, config, device)
         M = torch.FloatTensor(self.hidden_size, self.hidden_size)
         init.xavier_normal_(M)
         self.M = nn.Parameter(M, requires_grad=True)
 
     def forward(self, contexts, cm, images, gazes, responses, rm):
-        contexts_first = self.text_encoder(contexts, cm)
+        contexts_first = self.context_encoder(contexts, cm)
         images_gazes_feature = self.image_gaze_encoder(images, gazes)
-        responses_first = self.text_encoder(responses, rm)
+        responses_first = self.response_encoder(responses, rm)
 
-        if self.fusion_method == 'late':
-            contexts = contexts_first.mm(self.M)
-            contexts = contexts.view(-1, 1, self.hidden_size)
-            images = images_gazes_feature.view(-1, 1, self.hidden_size)
-            responses = responses_first.view(-1, self.hidden_size, 1)
-            score_1, score_2 = torch.bmm(contexts, responses), torch.bmm(images, responses)
-            probs_1, probs_2 = torch.sigmoid(score_1), torch.sigmoid(score_2)
-            prob = torch.bmm(probs_1, probs_2).view(-1, 1)
-        elif self.fusion_method == 'concat':
+        if self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_gazes_feature), dim=1))
             responses_images = self.fc(torch.cat((responses_first, images_gazes_feature), dim=1))
         elif self.fusion_method == 'sum':
@@ -139,14 +117,12 @@ class TextImageGazeTransformerEncoder(nn.Module):
             responses_images = responses_first * images_gazes_feature
         elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
             contexts_images = self.fusion([contexts_first, images_gazes_feature])
-            responses_images = self.fusion([responses_first, images_gazes_feature])
-        
-        if self.fusion_method != 'late':
-            contexts_images = contexts_images.mm(self.M)
-            contexts_images = contexts_images.view(-1, 1, self.hidden_size)
-            responses_images = responses_images.view(-1, self.hidden_size, 1)
-            score = torch.bmm(contexts_images, responses_images)
-            prob = torch.sigmoid(score).view(-1, 1)
+
+        contexts_images = contexts_images.mm(self.M)
+        contexts_images = contexts_images.view(-1, 1, self.hidden_size)
+        responses = responses_first.view(-1, self.hidden_size, 1)
+        score = torch.bmm(contexts_images, responses)
+        prob = torch.sigmoid(score).view(-1, 1)
 
         return prob
 
@@ -173,9 +149,6 @@ class TextImageGazeBertEncoder(nn.Module):
         elif image_model == 'resnet':
             from model.resnet import ResNetEncoder
             self.image_gaze_encoder = ResNetEncoder(self.hidden_size)
-        elif image_model == 'efficientnet':
-            from model.efficientnet import EfficientNetEncoder
-            self.image_gaze_encoder = EfficientNetEncoder(self.hidden_size)
 
         from model.bert import BertEncoder
         self.text_encoder = BertEncoder(config)
@@ -188,15 +161,7 @@ class TextImageGazeBertEncoder(nn.Module):
         images_gazes_feature = self.image_gaze_encoder(images, gazes)
         responses_first = self.text_encoder(responses, rm)
 
-        if self.fusion_method == 'late':
-            contexts = contexts_first.mm(self.M)
-            contexts = contexts.view(-1, 1, self.hidden_size)
-            images = images_gazes_feature.view(-1, 1, self.hidden_size)
-            responses = responses_first.view(-1, self.hidden_size, 1)
-            score_1, score_2 = torch.bmm(contexts, responses), torch.bmm(images, responses)
-            probs_1, probs_2 = torch.sigmoid(score_1), torch.sigmoid(score_2)
-            prob = torch.bmm(probs_1, probs_2).view(-1, 1)
-        elif self.fusion_method == 'concat':
+        if self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_gazes_feature), dim=1))
             responses_images = self.fc(torch.cat((responses_first, images_gazes_feature), dim=1))
         elif self.fusion_method == 'sum':
@@ -207,14 +172,12 @@ class TextImageGazeBertEncoder(nn.Module):
             responses_images = responses_first * images_gazes_feature
         elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
             contexts_images = self.fusion([contexts_first, images_gazes_feature])
-            responses_images = self.fusion([responses_first, images_gazes_feature])
-        
-        if self.fusion_method != 'late':
-            contexts_images = contexts_images.mm(self.M)
-            contexts_images = contexts_images.view(-1, 1, self.hidden_size)
-            responses_images = responses_images.view(-1, self.hidden_size, 1)
-            score = torch.bmm(contexts_images, responses_images)
-            prob = torch.sigmoid(score).view(-1, 1)
+
+        contexts_images = contexts_images.mm(self.M)
+        contexts_images = contexts_images.view(-1, 1, self.hidden_size)
+        responses = responses_first.view(-1, self.hidden_size, 1)
+        score = torch.bmm(contexts_images, responses)
+        prob = torch.sigmoid(score).view(-1, 1)
 
         return prob
 

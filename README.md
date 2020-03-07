@@ -14,8 +14,8 @@ Options:
 
     --task                response / action
     --text_model          lstm / transformer / bert
-    --image_model         vgg / resnet / efficientnet
-    --fusion_method        concat / sum / product / mcb / mlb / mutan / block / late
+    --image_model         vgg / resnet
+    --fusion_method        concat / sum / product / mcb / mlb / mutan / block
 ```
 
 ### Eval options
@@ -41,13 +41,13 @@ Options:
 ### Text and Image modality
 
 1. `$ cd modality/text_image`
-2. `$ python train.py --task response --text_model transformer --image_model resnet --fusion_method concat`
+2. `$ python train.py --task response --text_model bert --image_model resnet --fusion_method block`
 3. `$ python eval.py --path <path> --log`
 
 ### Text, Image and Gaze modality
 
 1. `$ cd modality/text_image_gaze`
-2. `$ python train.py --task action --text_model bert --image_model efficientnet --fusion_method late`
+2. `$ python train.py --task action --text_model bert --image_model resnet --fusion_method block`
 3. `$ python eval.py --path <path> --log`
 
 ## Result
@@ -66,7 +66,6 @@ Options:
 | --------------- |:-----------:|:-----------:|:-----------:|:----------:|
 | VGG             | 0.499       | 0.689       | 0.913       | 0.704      |
 | ResNet          | 0.376       | 0.560       | 0.842       | 0.703      |
-| EfficientNet    | 0.342       | 0.524       | 0.819       | 0.690      |
 
 #### Text and Image modality
 | Model / Metrics         | 1 in 10 R@1 | 1 in 10 R@2 | 1 in 10 R@5 | 1 in 2 R@1 |
@@ -97,7 +96,6 @@ Options:
 | --------------- |:-----------:|:-----------:|:------------:|:---------:|
 | VGG             | 0.353       | 0.514       | 0.820        | 0.687     |
 | ResNet          | 0.326       | 0.499       | 0.808        | 0.686     |
-| EfficientNet    | 0.319       | 0.491       | 0.799        | 0.671     |
 
 #### Text and Image modality
 | Model / Metrics         | 1 in 10 R@1 | 1 in 10 R@2 | 1 in 10 R@5 | 1 in 2 R@1 |
