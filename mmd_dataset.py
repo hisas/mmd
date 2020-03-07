@@ -46,7 +46,7 @@ def sentence2words(sentence):
     return sentence_words
 
 def create_id_to_vec(word_to_id):
-    model = KeyedVectors.load_word2vec_format('data/model.vec', binary=False)
+    model = KeyedVectors.load_word2vec_format('data/cc.ja.300.vec', binary=False)
     id_to_vec = {}
 
     for word, id in word_to_id.items():
@@ -143,3 +143,4 @@ class MmdDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.crl[idx]
+
