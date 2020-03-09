@@ -24,40 +24,9 @@ def extract_gaze(df):
 
     return pd.DataFrame(data)
 
-def remove_x(df, task):
-    ng_words = ['なし', 'なi', '罰', 'ばつ', 'バツ', 'batu ', 'b', 'u', 'v', 'z']
-    if task == 'action':
-        ng_words.append('はい')
-    df = df[~df[task].isin(ng_words)]
-
-    df = df[~df[task].str.contains('×')]
-    df = df[~df[task].str.contains('x')]
-    df = df[~df[task].str.contains('✖')]
-    df = df[~df[task].str.contains('ｘ')]
-    df = df[~df[task].str.contains('Ｘ')]
-    df = df[~df[task].str.contains('ⅹ')]
-    df = df[~df[task].str.contains('✕')]
-    df = df[~df[task].str.contains('X')]
-
-    if task == 'action':
-        df = df[~df[task].str.contains('http')]
-        df = df[~df[task].str.contains('Heydouga')]
-        df = df[~df[task].str.contains('楽天Beauty')]
-        df = df[~df[task].str.contains('何もしな')]
-        df = df[~df[task].str.contains('なにもしな')]
-        df = df[~df[task].str.contains('特にな')]
-        df = df[~df[task].str.contains('とくにな')]
-
-    return df
 
 def filter_response_df(path):
-    df = pd.read_csv(path, delimiter='\t', usecols=['text1', 'image', 'gf_id', 'response'])
-
-    df = remove_x(df, 'response')
-    df['text1'] = df['text1'].str[56:-52].str.strip()
-    df = df[~df['text1'].isin(['""""""', '##', '$$$'])]
-    df['response'] = df['response'].str.strip()
-
+    df = pd.read_csv(path, delimiter='\t')
     train_df, val_df, test_df = df[:len(df)-24000], df[len(df)-24000:len(df)-12000], df[len(df)-12000:len(df)]
     train_df, val_df, test_df = extract_gaze(train_df), extract_gaze(val_df), extract_gaze(test_df)
 
@@ -117,13 +86,7 @@ def export_response_test_df(df):
     pd.DataFrame(data).to_csv('data/response_test_10.csv', index=False, header=False)
 
 def filter_action_df(path):
-    df = pd.read_csv(path, delimiter='\t', usecols=['text1', 'image', 'gf_id', 'action'])
-
-    df = remove_x(df, 'action')
-    df['text1'] = df['text1'].str[56:-52].str.strip()
-    df = df[~df['text1'].isin(['""""""', '##', '$$$'])]
-    df['action'] = df['action'].str.strip()
-
+    df = pd.read_csv(path, delimiter='\t')
     train_df, val_df, test_df = df[:len(df)-6000], df[len(df)-6000:len(df)-3000], df[len(df)-3000:len(df)]
     train_df, val_df, test_df = extract_gaze(train_df), extract_gaze(val_df), extract_gaze(test_df)
 
@@ -192,13 +155,13 @@ subprocess.call('gzip data/cc.ja.300.vec.gz -cd > data/cc.ja.300.vec', shell=Tru
 os.remove('data/cc.ja.300.vec.gz')
 
 print('Exporting response_train.csv, response_val.csv, response_test_1.csv and response_test_10.csv')
-train_response_df, val_response_df, test_response_df = filter_response_df('original_data/jparvsu-response.tsv')
+train_response_df, val_response_df, test_response_df = filter_response_df('data/cleaned_jparvsu-response.tsv')
 export_response_df(train_response_df, 'train')
 export_response_df(val_response_df, 'val')
 export_response_test_df(test_response_df)
 
 print('Exporting action_train.csv, action_val.csv, action_test_1.csv and action_test_10.csv')
-train_action_df, val_action_df, test_action_df = filter_action_df('original_data/jparvsu-response.tsv')
+train_action_df, val_action_df, test_action_df = filter_action_df('data/cleaned_jparvsu-action.tsv')
 export_action_df(train_action_df, 'train')
 export_action_df(val_action_df, 'val')
 export_action_test_df(test_action_df)

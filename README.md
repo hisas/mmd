@@ -4,6 +4,7 @@
 
 1. `$ pip install -r requirements.txt`
 2. [Install Git LFS](https://github.com/git-lfs/git-lfs/wiki/Installation) and run `$ git lfs pull` to download large files 
+3. `$ python clean_data.py`
 3. `$ python preprocess.py`
 
 ## Usage
@@ -57,8 +58,8 @@ Options:
 #### Text modality
 | Model / Metrics | 1 in 10 R@1 | 1 in 10 R@2 | 1 in 10 R@5 | 1 in 2 R@1 |
 | --------------- |:------------:|:----------:|:-----------:|:----------:|
-| LSTM            | 0.499        | 0.689      | 0.913       | 0.774      |
-| Transformer     | 0.537        | 0.716      | 0.921       | 0.781      |
+| LSTM            | 0.502        | 0.694      | 0.915       | 0.772      |
+| Transformer     | 0.530        | 0.707      | 0.916       | 0.776      |
 | Bert            | 0.502        | 0.678      | 0.896       | 0.760      |
 
 #### Image modality
@@ -87,8 +88,8 @@ Options:
 #### Text modality
 | Model / Metrics | 1 in 10 R@1 | 1 in 10 R@2 | 1 in 10 R@5 | 1 in 2 R@1 |
 | --------------- |:-----------:|:-----------:|:-----------:|:----------:|
-| LSTM            | 0.358       | 0.580       | 0.870       | 0.728      |
-| Transformer     | 0.382       | 0.582       | 0.848       | 0.714      |
+| LSTM            | 0.357       | 0.579       | 0.870       | 0.728      |
+| Transformer     | 0.384       | 0.577       | 0.856       | 0.722      |
 | Bert            | 0.405       | 0.595       | 0.864       | 0.726      |
 
 #### Image modality
