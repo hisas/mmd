@@ -4,6 +4,7 @@
 
 1. `$ pip install -r requirements.txt`
 2. [Install Git LFS](https://github.com/git-lfs/git-lfs/wiki/Installation) and run `$ git lfs pull` to download large files 
+3. `$ python clean_data.py`
 3. `$ python preprocess.py`
 
 ## Usage
