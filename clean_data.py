@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 
 def remove_x(df, task):
@@ -35,5 +36,6 @@ def export_cleaned_action(path):
 
     df.to_csv('data/cleaned_jparvsu-action.tsv', sep='\t', index=False)
 
+os.mkdir('data')
 export_cleaned_response('original_data/jparvsu-response.tsv')
 export_cleaned_action('original_data/jparvsu-response.tsv')

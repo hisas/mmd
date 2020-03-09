@@ -146,7 +146,6 @@ def export_action_test_df(df):
     pd.DataFrame(data).to_csv('data/action_test_10.csv', index=False, header=False)
 
 print('Downloading file')
-os.mkdir('data')
 urlretrieve('http://gazefollow.csail.mit.edu/downloads/data.zip', 'data/data.zip')
 subprocess.call('unzip -q data/data.zip -d data', shell=True)
 os.remove('data/data.zip')
