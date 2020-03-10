@@ -51,13 +51,10 @@ class TextImageLstmEncoder(nn.Module):
 
         if self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((sorted_c, images_feature), dim=1))
-            responses_images = self.fc(torch.cat((sorted_r, images_feature), dim=1))
         elif self.fusion_method == 'sum':
             contexts_images = sorted_c + images_feature
-            responses_images = sorted_r + images_feature
         elif self.fusion_method == 'product':
             contexts_images = sorted_c * images_feature
-            responses_images = sorted_r * images_feature
         elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
             contexts_images = self.fusion([sorted_c, images_feature])
 
@@ -108,16 +105,12 @@ class TextImageTransformerEncoder(nn.Module):
 
         if self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_feature), dim=1))
-            responses_images = self.fc(torch.cat((responses_first, images_feature), dim=1))
         elif self.fusion_method == 'sum':
             contexts_images = contexts_first + images_feature
-            responses_images = responses_first + images_feature
         elif self.fusion_method == 'product':
             contexts_images = contexts_first * images_feature
-            responses_images = responses_first * images_feature
         elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
             contexts_images = self.fusion([contexts_first, images_feature])
-            responses_images = self.fusion([responses_first, images_feature])
         
         contexts_images = contexts_images.mm(self.M)
         contexts_images = contexts_images.view(-1, 1, self.hidden_size)
@@ -162,23 +155,12 @@ class TextImageBertEncoder(nn.Module):
         images_feature = self.image_encoder(images)
         responses_first = self.text_encoder(responses, rm)
 
-        if self.fusion_method == 'late':
-            contexts = contexts_first.mm(self.M)
-            contexts = contexts.view(-1, 1, self.hidden_size)
-            images = images_feature.view(-1, 1, self.hidden_size)
-            responses = responses_first.view(-1, self.hidden_size, 1)
-            score_1, score_2 = torch.bmm(contexts, responses), torch.bmm(images, responses)
-            probs_1, probs_2 = torch.sigmoid(score_1), torch.sigmoid(score_2)
-            prob = torch.bmm(probs_1, probs_2).view(-1, 1)
-        elif self.fusion_method == 'concat':
+        if self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_feature), dim=1))
-            responses_images = self.fc(torch.cat((responses_first, images_feature), dim=1))
         elif self.fusion_method == 'sum':
             contexts_images = contexts_first + images_feature
-            responses_images = responses_first + images_feature
         elif self.fusion_method == 'product':
             contexts_images = contexts_first * images_feature
-            responses_images = responses_first * images_feature
         elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
             contexts_images = self.fusion([contexts_first, images_feature])
         
@@ -189,4 +171,3 @@ class TextImageBertEncoder(nn.Module):
         prob = torch.sigmoid(score).view(-1, 1)
 
         return prob
-

@@ -51,13 +51,10 @@ class TextImageGazeLstmEncoder(nn.Module):
 
         if self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((sorted_c, images_gazes_feature), dim=1))
-            responses_images = self.fc(torch.cat((sorted_r, images_gazes_feature), dim=1))
         elif self.fusion_method == 'sum':
             contexts_images = sorted_c + images_gazes_feature
-            responses_images = sorted_r + images_gazes_feature
         elif self.fusion_method == 'product':
             contexts_images = sorted_c * images_gazes_feature
-            responses_images = sorted_r * images_gazes_feature
         elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
             contexts_images = self.fusion([sorted_c, images_gazes_feature])
 
@@ -108,13 +105,10 @@ class TextImageGazeTransformerEncoder(nn.Module):
 
         if self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_gazes_feature), dim=1))
-            responses_images = self.fc(torch.cat((responses_first, images_gazes_feature), dim=1))
         elif self.fusion_method == 'sum':
             contexts_images = contexts_first + images_gazes_feature
-            responses_images = responses_first + images_gazes_feature
         elif self.fusion_method == 'product':
             contexts_images = contexts_first * images_gazes_feature
-            responses_images = responses_first * images_gazes_feature
         elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
             contexts_images = self.fusion([contexts_first, images_gazes_feature])
 
@@ -163,13 +157,10 @@ class TextImageGazeBertEncoder(nn.Module):
 
         if self.fusion_method == 'concat':
             contexts_images = self.fc(torch.cat((contexts_first, images_gazes_feature), dim=1))
-            responses_images = self.fc(torch.cat((responses_first, images_gazes_feature), dim=1))
         elif self.fusion_method == 'sum':
             contexts_images = contexts_first + images_gazes_feature
-            responses_images = responses_first + images_gazes_feature
         elif self.fusion_method == 'product':
             contexts_images = contexts_first * images_gazes_feature
-            responses_images = responses_first * images_gazes_feature
         elif self.fusion_method in ['mcb', 'mlb', 'mutan', 'block']:
             contexts_images = self.fusion([contexts_first, images_gazes_feature])
 
@@ -180,4 +171,3 @@ class TextImageGazeBertEncoder(nn.Module):
         prob = torch.sigmoid(score).view(-1, 1)
 
         return prob
-
