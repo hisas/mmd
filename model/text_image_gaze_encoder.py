@@ -29,7 +29,7 @@ class TextImageGazeLstmEncoder(nn.Module):
             self.image_gaze_encoder = VggEncoder(self.hidden_size, gaze=True)
         elif image_model == 'resnet':
             from model.resnet import ResNetEncoder
-            self.image_gaze_encoder = ResNetEncoder(self.hidden_size)
+            self.image_gaze_encoder = ResNetEncoder(self.hidden_size, gaze=True)
 
         from model.lstm import LstmEncoder
         self.context_encoder = LstmEncoder(id_to_vec, emb_size, vocab_size, config)
@@ -89,7 +89,7 @@ class TextImageGazeTransformerEncoder(nn.Module):
             self.image_gaze_encoder = VggEncoder(self.hidden_size, gaze=True)
         elif image_model == 'resnet':
             from model.resnet import ResNetEncoder
-            self.image_gaze_encoder = ResNetEncoder(self.hidden_size)
+            self.image_gaze_encoder = ResNetEncoder(self.hidden_size, gaze=True)
 
         from model.transformer import TransformerEncoder
         self.context_encoder = TransformerEncoder(id_to_vec, emb_size, vocab_size, config, device)
@@ -142,7 +142,7 @@ class TextImageGazeBertEncoder(nn.Module):
             self.image_gaze_encoder = VggEncoder(self.hidden_size, gaze=True)
         elif image_model == 'resnet':
             from model.resnet import ResNetEncoder
-            self.image_gaze_encoder = ResNetEncoder(self.hidden_size)
+            self.image_gaze_encoder = ResNetEncoder(self.hidden_size, gaze=True)
 
         from model.bert import BertEncoder
         self.text_encoder = BertEncoder(config)
