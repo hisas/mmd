@@ -142,7 +142,7 @@ def train_model(learning_rate, l2_penalty, epochs):
                 torch.save(encoder.state_dict(), save_path)
                 print("New best found and saved.")
 
-        if val_accuracy + 0.01 < best_val_accuracy:
+        if epoch >= 25 and val_accuracy + 0.015 < best_val_accuracy:
             print(str(datetime.now()).split('.')[0], "Training and validation epochs finished.")
             break
 
