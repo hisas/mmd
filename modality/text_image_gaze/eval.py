@@ -96,12 +96,12 @@ def calc_test_accuracy():
                 probs = encoder(contexts, cm, images, gazes, responses, rm)
 
             for i, (prob, label) in enumerate(zip(probs, labels)):
-                p, l, g1, g2 = prob.item(), label.item(), gazes[i][0].item(), gazes[i][1].item()
+                p, l, e1, e2, g1, g2 = prob.item(), label.item(), gazes[i][0].item(), gazes[i][1].item(), gazes[i][2].item(), gazes[i][3].item()
                 if ((p >= 0.5) and (l == 1.0)) or ((p < 0.5) and (l == 0.0)):
                     test_correct_count += 1
-                    logging.info('%s %s %s %s %s %s %s %s', 'o', h(contexts[i]), h(responses[i]), images_path[i], g1, g2, int(l), round(p, 2))
+                    logging.info('%s %s %s %s %s %s %s %s %s %s', 'o', h(contexts[i]), h(responses[i]), images_path[i], e1, e2, g1, g2, int(l), round(p, 2))
                 else:
-                    logging.info('%s %s %s %s %s %s %s %s', 'x', h(contexts[i]), h(responses[i]), images_path[i], g1, g2, int(l), round(p, 2))
+                    logging.info('%s %s %s %s %s %s %s %s %s %s', 'x', h(contexts[i]), h(responses[i]), images_path[i], e1, e2, g1, g2, int(l), round(p, 2))
 
     test_accuracy = test_correct_count / len(test_1)
 
@@ -154,7 +154,7 @@ def get_recall_at_k():
             else:
                 msg += 'x'
 
-            logging.info('%s %s %s %s %s %s', msg, h(contexts[0]), h(responses[0]), images_path[0], gazes[0][0].item(), gazes[0][1].item())
+            logging.info('%s %s %s %s %s %s %s %s', msg, h(contexts[0]), h(responses[0]), images_path[0], gazes[0][0].item(), gazes[0][1].item(), gazes[0][2].item(), gazes[0][3].item())
             for r, p in zip(responses[sorted_idx], sorted_probs):
                 logging.info('%s %s %s', '\t', h(r[0]), p.item())
 
