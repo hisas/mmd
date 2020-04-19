@@ -10,6 +10,9 @@ def remove_x(df, task):
         words = ['なし', 'なi', '罰', 'ばつ', 'バツ', 'batu ', 'はい', 'b', 'u', 'v', 'z', 'してみる']
         df = df[~df[task].isin(words)]
 
+        words = ['返答する', '返事', '返事する', '返事をする', '返事した']
+        df = df[~df[task].isin(words)]
+
         words = ['http', 'Heydouga', '楽天Beauty', '何もしな', 'なにもしな', '特にな', 'とくにな']
         for word in words:
             df = df[~df[task].str.contains(word)]

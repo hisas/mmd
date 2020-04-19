@@ -135,7 +135,7 @@ def export_action_test_df(df):
             flag = True
             ds = []
             for t in ts:
-                if t[0] != r[0]:
+                if t[0] != r[0] and t[1] not in ds:
                     ds.append(t[1])
                 else:
                     flag = False
