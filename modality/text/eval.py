@@ -35,7 +35,7 @@ def set_log():
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     format = '%(message)s'
-    filename = save_dir + '/' + text_model + '_' + datetime.now().strftime('%Y%m%d%H%M') + '.log'
+    filename = save_dir + '/' + text_model + '_' + datetime.now().strftime('%Y%m%d%H%M') + '.txt'
     logging.basicConfig(filename=filename, level=logging.DEBUG, format=format)
 
 def get_config(file_path):
